@@ -86,14 +86,17 @@ with tab1:
         with col1:
             # RMSE comparison
             fig_rmse = go.Figure()
-            
-            # Separate baseline and tuned models
-            baseline_models = [m for m in all_results.index if 'tuned' not in m]
-            tuned_models = [m for m in all_results.index if 'tuned' in m]
+
+
+            # Separate baseline and tuned models.
+            baseline_models = model_results.index.tolist()
+            tuned_models = tuned_results.index.tolist()
+
             
             # Plot baseline models
             if baseline_models:
                 baseline_data = all_results.loc[baseline_models]
+
                 fig_rmse.add_trace(go.Bar(
                     x=baseline_models,
                     y=baseline_data['RMSE'],
@@ -694,9 +697,6 @@ st.markdown("## 📋 Model Card")
 try:
     with st.expander("View Model Documentation"):
         
-        # --- START: ROBUST METRIC FIX ---
-        # Build the performance summary string dynamically to avoid KeyErrors
-        
         performance_summary = [
             f"- **RMSE**: {best_rmse:.2f} bikes/hour",
             f"- **R² Score**: {best_r2:.4f}"
@@ -720,7 +720,6 @@ try:
         # Join all performance metrics with newline formatting
         performance_summary_str = "\n        ".join(performance_summary)
         
-        # --- END: ROBUST METRIC FIX ---
         
         st.markdown(f"""
         ### Model Information
