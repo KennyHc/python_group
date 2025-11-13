@@ -35,22 +35,36 @@ def load_model():
     except:
         return None
 
+# --- Main App Execution ---
+
+# 1. CRITICAL BLOCK: Load Data
 try:
     model_results, tuned_results, predictions, feature_importance = load_model_data()
     best_model = load_model()
     
-    # Model comparison section
-    st.markdown("## Model Comparison")
+    # Pre-calculate some key values needed for multiple sections
+    best_model_name = tuned_results['RMSE'].idxmin()
+    best_rmse = tuned_results.loc[best_model_name, 'RMSE']
+    best_r2 = tuned_results.loc[best_model_name, 'R²']
     
-    # Tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "Performance Overview",
-        "Detailed Metrics",
-        "Prediction Analysis",
-        "Feature Importance"
-    ])
-    
-    with tab1:
+except Exception as e:
+    st.error(f"Fatal Error: Failed to load core model data: {str(e)}")
+    st.info("Please ensure all data files (model_results.csv, tuned_model_results.csv, predictions.csv) are present in the './data' directory.")
+    st.stop() # Stop execution if data loading fails
+
+
+# 2. Model Comparison Section (Tabs)
+st.markdown("## Model Comparison")
+
+tab1, tab2, tab3, tab4 = st.tabs([
+    "Performance Overview",
+    "Detailed Metrics",
+    "Prediction Analysis",
+    "Feature Importance"
+])
+
+with tab1:
+    try:
         st.markdown("### Model Performance Overview")
         
         # Combine baseline and tuned results
@@ -152,10 +166,6 @@ try:
             st.plotly_chart(fig_r2, use_container_width=True)
         
         # Best model highlight
-        best_model_name = tuned_results['RMSE'].idxmin()
-        best_rmse = tuned_results.loc[best_model_name, 'RMSE']
-        best_r2 = tuned_results.loc[best_model_name, 'R²']
-        
         st.success(f"""
         🏆 **Best Model: {best_model_name}**
         - RMSE: {best_rmse:.2f} bikes
@@ -228,10 +238,16 @@ try:
                         f"{row['Improvement %']:+.1f}%",
                         delta_color="normal" if row['Improvement %'] > 0 else "inverse"
                     )
-    
-    with tab2:
+    except Exception as e:
+        st.error(f"Error loading 'Performance Overview' tab: {e}")
+
+with tab2:
+    try:
         st.markdown("### 🎯 Detailed Performance Metrics")
         
+        all_results = pd.concat([model_results, tuned_results])
+        display_cols = [col for col in ['RMSE', 'R²', 'MAE', 'MAPE'] if col in all_results.columns]
+
         # Select models to compare
         selected_models = st.multiselect(
             "Select models to compare:",
@@ -255,9 +271,16 @@ try:
                     for metric in available_metrics:
                         val = comparison_df.loc[metric, model]
                         if metric in ['RMSE', 'MAE']:  # Lower is better
-                            normalized = 1 - (val - comparison_df.loc[metric].min()) / (comparison_df.loc[metric].max() - comparison_df.loc[metric].min())
+                            # Handle case where max and min are the same (prevents division by zero)
+                            if (comparison_df.loc[metric].max() - comparison_df.loc[metric].min()) == 0:
+                                normalized = 0.5 # or 1.0, depending on preference
+                            else:
+                                normalized = 1 - (val - comparison_df.loc[metric].min()) / (comparison_df.loc[metric].max() - comparison_df.loc[metric].min())
                         else:  # Higher is better (R²)
-                            normalized = (val - comparison_df.loc[metric].min()) / (comparison_df.loc[metric].max() - comparison_df.loc[metric].min())
+                            if (comparison_df.loc[metric].max() - comparison_df.loc[metric].min()) == 0:
+                                normalized = 0.5
+                            else:
+                                normalized = (val - comparison_df.loc[metric].min()) / (comparison_df.loc[metric].max() - comparison_df.loc[metric].min())
                         values.append(normalized)
                     
                     fig_radar.add_trace(go.Scatterpolar(
@@ -339,203 +362,214 @@ try:
             - Monitor weather forecasts for demand spikes
             - Consider {error_pct:.0f}% margin in capacity planning
             """)
-    
-    with tab3:
+    except Exception as e:
+        st.error(f"Error loading 'Detailed Metrics' tab: {e}")
+
+with tab3:
+    try:
         st.markdown("### 🔬 Prediction Analysis")
         
-        # Actual vs Predicted
-        st.markdown("#### Actual vs Predicted Values")
-        
-        # Add perfect prediction line
-        fig_pred = go.Figure()
-        
-        # Perfect prediction line
-        min_val = min(predictions['actual'].min(), predictions['predicted'].min())
-        max_val = max(predictions['actual'].max(), predictions['predicted'].max())
-        
-        fig_pred.add_trace(go.Scatter(
-            x=[min_val, max_val],
-            y=[min_val, max_val],
-            mode='lines',
-            name='Perfect Prediction',
-            line=dict(color='red', dash='dash'),
-            showlegend=True
-        ))
-        
-        # Actual predictions
-        fig_pred.add_trace(go.Scatter(
-            x=predictions['actual'],
-            y=predictions['predicted'],
-            mode='markers',
-            name='Predictions',
-            marker=dict(
-                size=5,
-                color=predictions['residual'].abs(),
-                colorscale='Viridis',
-                showscale=True,
-                colorbar=dict(title="Absolute Error")
-            ),
-            text=[f"Actual: {a}<br>Predicted: {p:.0f}<br>Error: {r:.0f}" 
-                  for a, p, r in zip(predictions['actual'], predictions['predicted'], predictions['residual'])],
-            hovertemplate='%{text}<extra></extra>'
-        ))
-        
-        fig_pred.update_layout(
-            title='Actual vs Predicted Bike Rentals',
-            xaxis_title='Actual Rentals',
-            yaxis_title='Predicted Rentals',
-            height=500
-        )
-        
-        st.plotly_chart(fig_pred, use_container_width=True)
-        
-        # Residual analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Residual distribution
-            fig_residual_dist = go.Figure()
+        # Check if required columns exist
+        required_cols = ['actual', 'predicted', 'residual', 'date', 'hour', 'weather', 'temp']
+        if not all(col in predictions.columns for col in required_cols):
+            st.warning(f"Prediction data is missing one of the required columns: {required_cols}")
+        else:
+            # Actual vs Predicted
+            st.markdown("#### Actual vs Predicted Values")
             
-            fig_residual_dist.add_trace(go.Histogram(
-                x=predictions['residual'],
-                nbinsx=50,
-                name='Residuals',
-                marker_color='lightblue'
+            # Add perfect prediction line
+            fig_pred = go.Figure()
+            
+            # Perfect prediction line
+            min_val = min(predictions['actual'].min(), predictions['predicted'].min())
+            max_val = max(predictions['actual'].max(), predictions['predicted'].max())
+            
+            fig_pred.add_trace(go.Scatter(
+                x=[min_val, max_val],
+                y=[min_val, max_val],
+                mode='lines',
+                name='Perfect Prediction',
+                line=dict(color='red', dash='dash'),
+                showlegend=True
             ))
             
-            # Add normal distribution overlay
-            mean_residual = predictions['residual'].mean()
-            std_residual = predictions['residual'].std()
-            
-            fig_residual_dist.update_layout(
-                title='Residual Distribution',
-                xaxis_title='Prediction Error (Actual - Predicted)',
-                yaxis_title='Frequency',
-                showlegend=False
-            )
-            
-            st.plotly_chart(fig_residual_dist, use_container_width=True)
-            
-            # Residual stats
-            st.caption(f"""
-            **Residual Statistics:**
-            - Mean: {mean_residual:.2f} (should be ~0)
-            - Std Dev: {std_residual:.2f}
-            - Skewness: {predictions['residual'].skew():.2f}
-            """)
-        
-        with col2:
-            # Residuals over time
-            fig_residual_time = go.Figure()
-            
-            fig_residual_time.add_trace(go.Scatter(
-                x=predictions['date'],
-                y=predictions['residual'],
+            # Actual predictions
+            fig_pred.add_trace(go.Scatter(
+                x=predictions['actual'],
+                y=predictions['predicted'],
                 mode='markers',
+                name='Predictions',
                 marker=dict(
-                    size=4,
-                    color=predictions['residual'],
-                    colorscale='RdBu',
-                    cmid=0,
+                    size=5,
+                    color=predictions['residual'].abs(),
+                    colorscale='Viridis',
                     showscale=True,
-                    colorbar=dict(title="Residual")
-                )
+                    colorbar=dict(title="Absolute Error")
+                ),
+                text=[f"Actual: {a}<br>Predicted: {p:.0f}<br>Error: {r:.0f}" 
+                    for a, p, r in zip(predictions['actual'], predictions['predicted'], predictions['residual'])],
+                hovertemplate='%{text}<extra></extra>'
             ))
             
-            # Add zero line
-            fig_residual_time.add_hline(y=0, line_dash="dash", line_color="gray")
-            
-            fig_residual_time.update_layout(
-                title='Residuals Over Time',
-                xaxis_title='Date',
-                yaxis_title='Prediction Error',
-                height=400
+            fig_pred.update_layout(
+                title='Actual vs Predicted Bike Rentals',
+                xaxis_title='Actual Rentals',
+                yaxis_title='Predicted Rentals',
+                height=500
             )
             
-            st.plotly_chart(fig_residual_time, use_container_width=True)
-        
-        # Error analysis by conditions
-        st.markdown("#### 🎯 Error Analysis by Conditions")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Error by hour
-            hourly_mae = predictions.groupby('hour')['residual'].apply(lambda x: x.abs().mean()).reset_index()
-            hourly_mae.columns = ['hour', 'mae']
+            st.plotly_chart(fig_pred, use_container_width=True)
             
-            fig_hour_error = go.Figure([go.Bar(
-                x=hourly_mae['hour'],
-                y=hourly_mae['mae'],
-                marker_color=hourly_mae['mae'],
-                marker_colorscale='Reds',
-                text=hourly_mae['mae'].round(0),
-                textposition='auto'
-            )])
+            # Residual analysis
+            col1, col2 = st.columns(2)
             
-            fig_hour_error.update_layout(
-                title='Average Prediction Error by Hour',
-                xaxis_title='Hour of Day',
-                yaxis_title='Mean Absolute Error',
-                showlegend=False
-            )
+            with col1:
+                # Residual distribution
+                fig_residual_dist = go.Figure()
+                
+                fig_residual_dist.add_trace(go.Histogram(
+                    x=predictions['residual'],
+                    nbinsx=50,
+                    name='Residuals',
+                    marker_color='lightblue'
+                ))
+                
+                # Add normal distribution overlay
+                mean_residual = predictions['residual'].mean()
+                std_residual = predictions['residual'].std()
+                
+                fig_residual_dist.update_layout(
+                    title='Residual Distribution',
+                    xaxis_title='Prediction Error (Actual - Predicted)',
+                    yaxis_title='Frequency',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig_residual_dist, use_container_width=True)
+                
+                # Residual stats
+                st.caption(f"""
+                **Residual Statistics:**
+                - Mean: {mean_residual:.2f} (should be ~0)
+                - Std Dev: {std_residual:.2f}
+                - Skewness: {predictions['residual'].skew():.2f}
+                """)
             
-            st.plotly_chart(fig_hour_error, use_container_width=True)
-        
-        with col2:
-            # Error by weather
-            weather_mae = predictions.groupby('weather')['residual'].apply(lambda x: x.abs().mean()).reset_index()
-            weather_mae.columns = ['weather', 'mae']
-            weather_mae['weather_name'] = weather_mae['weather'].map({
-                1: 'Clear',
-                2: 'Mist/Cloudy',
-                3: 'Light Rain/Snow',
-                4: 'Heavy Rain/Snow'
-            })
+            with col2:
+                # Residuals over time
+                fig_residual_time = go.Figure()
+                
+                fig_residual_time.add_trace(go.Scatter(
+                    x=predictions['date'],
+                    y=predictions['residual'],
+                    mode='markers',
+                    marker=dict(
+                        size=4,
+                        color=predictions['residual'],
+                        colorscale='RdBu',
+                        cmid=0,
+                        showscale=True,
+                        colorbar=dict(title="Residual")
+                    )
+                ))
+                
+                # Add zero line
+                fig_residual_time.add_hline(y=0, line_dash="dash", line_color="gray")
+                
+                fig_residual_time.update_layout(
+                    title='Residuals Over Time',
+                    xaxis_title='Date',
+                    yaxis_title='Prediction Error',
+                    height=400
+                )
+                
+                st.plotly_chart(fig_residual_time, use_container_width=True)
             
-            fig_weather_error = go.Figure([go.Bar(
-                x=weather_mae['weather_name'],
-                y=weather_mae['mae'],
-                marker_color=['green', 'yellow', 'orange', 'red'][:len(weather_mae)],
-                text=weather_mae['mae'].round(0),
-                textposition='auto'
-            )])
+            # Error analysis by conditions
+            st.markdown("#### 🎯 Error Analysis by Conditions")
             
-            fig_weather_error.update_layout(
-                title='Average Prediction Error by Weather',
-                xaxis_title='Weather Condition',
-                yaxis_title='Mean Absolute Error',
-                showlegend=False
-            )
+            col1, col2 = st.columns(2)
             
-            st.plotly_chart(fig_weather_error, use_container_width=True)
-        
-        # Worst predictions analysis
-        st.markdown("#### ⚠️ Largest Prediction Errors")
-        
-        # Find worst over and under predictions
-        worst_over = predictions.nlargest(5, 'residual')[['date', 'actual', 'predicted', 'residual', 'weather', 'temp']]
-        worst_under = predictions.nsmallest(5, 'residual')[['date', 'actual', 'predicted', 'residual', 'weather', 'temp']]
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Largest Over-predictions:**")
-            st.dataframe(
-                worst_over.round({'predicted': 0, 'residual': 0, 'temp': 2}),
-                use_container_width=True,
-                hide_index=True
-            )
-        
-        with col2:
-            st.markdown("**Largest Under-predictions:**")
-            st.dataframe(
-                worst_under.round({'predicted': 0, 'residual': 0, 'temp': 2}),
-                use_container_width=True,
-                hide_index=True
-            )
-    
-    with tab4:
+            with col1:
+                # Error by hour
+                hourly_mae = predictions.groupby('hour')['residual'].apply(lambda x: x.abs().mean()).reset_index()
+                hourly_mae.columns = ['hour', 'mae']
+                
+                fig_hour_error = go.Figure([go.Bar(
+                    x=hourly_mae['hour'],
+                    y=hourly_mae['mae'],
+                    marker_color=hourly_mae['mae'],
+                    marker_colorscale='Reds',
+                    text=hourly_mae['mae'].round(0),
+                    textposition='auto'
+                )])
+                
+                fig_hour_error.update_layout(
+                    title='Average Prediction Error by Hour',
+                    xaxis_title='Hour of Day',
+                    yaxis_title='Mean Absolute Error',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig_hour_error, use_container_width=True)
+            
+            with col2:
+                # Error by weather
+                weather_mae = predictions.groupby('weather')['residual'].apply(lambda x: x.abs().mean()).reset_index()
+                weather_mae.columns = ['weather', 'mae']
+                weather_mae['weather_name'] = weather_mae['weather'].map({
+                    1: 'Clear',
+                    2: 'Mist/Cloudy',
+                    3: 'Light Rain/Snow',
+                    4: 'Heavy Rain/Snow'
+                })
+                
+                fig_weather_error = go.Figure([go.Bar(
+                    x=weather_mae['weather_name'],
+                    y=weather_mae['mae'],
+                    marker_color=['green', 'yellow', 'orange', 'red'][:len(weather_mae)],
+                    text=weather_mae['mae'].round(0),
+                    textposition='auto'
+                )])
+                
+                fig_weather_error.update_layout(
+                    title='Average Prediction Error by Weather',
+                    xaxis_title='Weather Condition',
+                    yaxis_title='Mean Absolute Error',
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig_weather_error, use_container_width=True)
+            
+            # Worst predictions analysis
+            st.markdown("#### ⚠️ Largest Prediction Errors")
+            
+            # Find worst over and under predictions
+            worst_over = predictions.nlargest(5, 'residual')[['date', 'actual', 'predicted', 'residual', 'weather', 'temp']]
+            worst_under = predictions.nsmallest(5, 'residual')[['date', 'actual', 'predicted', 'residual', 'weather', 'temp']]
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Largest Over-predictions:**")
+                st.dataframe(
+                    worst_over.round({'predicted': 0, 'residual': 0, 'temp': 2}),
+                    use_container_width=True,
+                    hide_index=True
+                )
+            
+            with col2:
+                st.markdown("**Largest Under-predictions:**")
+                st.dataframe(
+                    worst_under.round({'predicted': 0, 'residual': 0, 'temp': 2}),
+                    use_container_width=True,
+                    hide_index=True
+                )
+    except Exception as e:
+        st.error(f"Error loading 'Prediction Analysis' tab: {e}")
+
+with tab4:
+    try:
         st.markdown("### 🌟 Feature Importance Analysis")
         
         if feature_importance is not None and len(feature_importance) > 0:
@@ -606,14 +640,17 @@ try:
             # Display category analysis
             col1, col2, col3 = st.columns(3)
             
+            # Use max 3 columns, handle if fewer categories
+            cols = [col1, col2, col3]
             for i, (category, stats) in enumerate(category_importance.items()):
-                with [col1, col2, col3][i]:
-                    st.metric(
-                        category,
-                        f"{stats['Total Importance']:.3f}",
-                        f"{stats['Feature Count']} features"
-                    )
-                    st.caption(f"Top: {stats['Top Feature']}")
+                if i < len(cols):
+                    with cols[i]:
+                        st.metric(
+                            category,
+                            f"{stats['Total Importance']:.3f}",
+                            f"{stats['Feature Count']} features"
+                        )
+                        st.caption(f"Top: {stats['Top Feature']}")
             
             # Feature importance insights
             st.markdown("#### 💡 Key Feature Insights")
@@ -637,7 +674,7 @@ try:
                 The feature importance from tree-based models captures both linear and non-linear relationships.
                 """)
         else:
-            st.warning("Feature importance data not available. Tree-based models typically provide this information.")
+            st.warning("Feature importance data ('./data/feature_importance.csv') not found or is empty.")
             
             st.info("""
             **Why Feature Importance Matters:**
@@ -646,12 +683,45 @@ try:
             - Validates the feature engineering process
             - Guides future data collection efforts
             """)
-    
-    # Model card section
-    st.markdown("---")
-    st.markdown("## 📋 Model Card")
-    
+    except Exception as e:
+        st.error(f"Error loading 'Feature Importance' tab: {e}")
+
+
+# 3. Model Card Section
+st.markdown("---")
+st.markdown("## 📋 Model Card")
+
+try:
     with st.expander("View Model Documentation"):
+        
+        # --- START: ROBUST METRIC FIX ---
+        # Build the performance summary string dynamically to avoid KeyErrors
+        
+        performance_summary = [
+            f"- **RMSE**: {best_rmse:.2f} bikes/hour",
+            f"- **R² Score**: {best_r2:.4f}"
+        ]
+        
+        # Conditionally add MAE if it exists
+        if 'MAE' in tuned_results.columns:
+            mae_value = tuned_results.loc[best_model_name, 'MAE']
+            performance_summary.append(f"- **MAE**: {mae_value:.2f}")
+        
+        # Conditionally add MAPE if it exists
+        if 'MAPE' in tuned_results.columns:
+            mape_value = tuned_results.loc[best_model_name, 'MAPE']
+            performance_summary.append(f"- **MAPE**: {mape_value:.1f}%")
+
+        # Add the business impact line
+        performance_summary.append(
+            f"- **Business Impact**: Prediction error represents ~{(best_rmse/predictions['actual'].mean()*100):.1f}% of average demand"
+        )
+        
+        # Join all performance metrics with newline formatting
+        performance_summary_str = "\n        ".join(performance_summary)
+        
+        # --- END: ROBUST METRIC FIX ---
+        
         st.markdown(f"""
         ### Model Information
         - **Model Type**: {best_model_name}
@@ -660,10 +730,7 @@ try:
         - **Target Variable**: Total bike rentals per hour (cnt)
         
         ### Performance Summary
-        - **RMSE**: {best_rmse:.2f} bikes/hour
-        - **R² Score**: {best_r2:.4f}
-        - **MAE**: {tuned_results.loc[best_model_name, 'MAE']:.2f} if available
-        - **Business Impact**: Prediction error represents ~{(best_rmse/predictions['actual'].mean()*100):.1f}% of average demand
+        {performance_summary_str}
         
         ### Use Cases
         - Hourly capacity planning
@@ -683,7 +750,5 @@ try:
         - Maintain {best_rmse*2:.0f} bikes as safety buffer
         - Consider ensemble predictions during peak hours
         """)
-
 except Exception as e:
-    st.error(f"Error loading model data: {str(e)}")
-    st.info("Please ensure the model files are properly exported from the Jupyter notebook.")
+    st.error(f"Error loading Model Card: {e}")
