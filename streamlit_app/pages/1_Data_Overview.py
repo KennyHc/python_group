@@ -4,21 +4,39 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from pathlib import Path
 
 st.set_page_config(page_title="Data Overview", page_icon="📊", layout="wide")
+
+script_dir = Path(__file__).parent.parent
 
 # Title
 st.title("Data Overview & Quality Analysis")
 st.markdown("Explore the bike-sharing dataset structure, quality, and basic statistics")
 
-# Load data
 @st.cache_data
 def load_data():
-    df_original = pd.read_csv('./data/bike_data_original.csv')
-    df_processed = pd.read_csv('./data/bike_data_processed.csv')
-    df_original['dteday'] = pd.to_datetime(df_original['dteday'])
-    df_processed['dteday'] = pd.to_datetime(df_processed['dteday'])
-    return df_original, df_processed
+    """Loads both original and processed datasets."""
+    try:
+        path_original = script_dir / 'data/bike_data_original.csv'
+        path_processed = script_dir / 'data/bike_data_processed.csv'
+        
+        df_original = pd.read_csv(path_original)
+        df_processed = pd.read_csv(path_processed)
+        
+        df_original['dteday'] = pd.to_datetime(df_original['dteday'])
+        df_processed['dteday'] = pd.to_datetime(df_processed['dteday'])
+        
+        return df_original, df_processed
+        
+    except FileNotFoundError as e:
+        st.error(f"Error: A data file was not found.")
+        st.error(f"Details: {e}")
+        st.info("Please check that 'bike_data_original.csv' and 'bike_data_processed.csv' exist in the 'data' folder.")
+        return None, None  # Return None for both dataframes
+    except Exception as e:
+        st.error(f"An error occurred loading the data: {e}")
+        return None, None
 
 try:
     df_original, df_processed = load_data()

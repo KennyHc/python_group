@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 import joblib
+from pathlib import Path
 
 st.set_page_config(page_title="Predictions", page_icon="🔮", layout="wide")
 
@@ -12,30 +13,52 @@ st.set_page_config(page_title="Predictions", page_icon="🔮", layout="wide")
 st.title("Real-Time Demand Predictions")
 st.markdown("Make predictions for bike rental demand using the trained model")
 
-# --- Model & Data Loading ---
+script_dir = Path(__file__).parent.parent
+
 @st.cache_resource
 def load_model():
+    """Loads the pickled model file."""
     try:
-        model = joblib.load('./models/best_model.pkl')
+        model_path = script_dir / 'models/best_model.pkl'
+        model = joblib.load(model_path)
         return model
-    except:
+    except FileNotFoundError:
+        st.error("Error: The model file ('best_model.pkl') was not found.")
+        st.info("Please check the 'models' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading the model: {e}")
         return None
 
 @st.cache_data
 def load_feature_names():
+    """Loads the feature names from a CSV."""
     try:
-        features = pd.read_csv('./data/feature_names.csv')
+        features_path = script_dir / 'data/feature_names.csv'
+        features = pd.read_csv(features_path)
         return features['features'].tolist()
-    except:
+    except FileNotFoundError:
+        st.error("Error: The features file ('feature_names.csv') was not found.")
+        st.info("Please check the 'data' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading feature names: {e}")
         return None
 
 @st.cache_data
 def load_historical_data():
+    """Loads the main processed dataset."""
     try:
-        df = pd.read_csv('./data/bike_data_processed.csv')
+        data_path = script_dir / 'data/bike_data_processed.csv'
+        df = pd.read_csv(data_path)
         df['dteday'] = pd.to_datetime(df['dteday'])
         return df
-    except:
+    except FileNotFoundError:
+        st.error("Error: The main data file ('bike_data_processed.csv') was not found.")
+        st.info("Please check the 'data' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading historical data: {e}")
         return None
 
 # --- Feature Engineering Function (Refactored) ---

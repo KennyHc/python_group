@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from pathlib import Path
 
 st.set_page_config(page_title="Recommendations", page_icon="💡", layout="wide")
 
@@ -14,15 +15,29 @@ st.markdown("Actionable insights and recommendations based on data analysis and 
 @st.cache_data
 def load_analysis_data():
     try:
-        # Load various analysis results
-        df = pd.read_csv('./data/bike_data_processed.csv')
+
+        script_dir = Path(__file__).parent.parent
+        
+        path_df = script_dir / 'data/bike_data_processed.csv'
+        path_model_results = script_dir / 'data/tuned_model_results.csv'
+        path_predictions = script_dir / 'data/predictions.csv'
+        
+        df = pd.read_csv(path_df)
         df['dteday'] = pd.to_datetime(df['dteday'])
         
-        model_results = pd.read_csv('./data/tuned_model_results.csv', index_col=0)
-        predictions = pd.read_csv('./data/predictions.csv')
+        model_results = pd.read_csv(path_model_results, index_col=0)
+        
+        predictions = pd.read_csv(path_predictions)
         
         return df, model_results, predictions
-    except:
+
+    except FileNotFoundError as e:
+        st.error(f"Error: A data file was not found.")
+        st.error(f"Details: {e}")
+        st.info("Please make sure the 'data' folder and its CSV files are in your GitHub repo and the paths are correct.")
+        return None, None, None
+    except Exception as e:
+        st.error(f"An error occurred while loading data: {e}")
         return None, None, None
 
 try:

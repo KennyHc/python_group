@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+from pathlib import Path
 
 st.set_page_config(page_title="Exploratory Analysis", page_icon="🔍", layout="wide")
 
@@ -11,12 +12,25 @@ st.set_page_config(page_title="Exploratory Analysis", page_icon="🔍", layout="
 st.title("Exploratory Data Analysis")
 st.markdown("Discover patterns, trends, and relationships in bike-sharing demand")
 
-# Load data
+script_dir = Path(__file__).parent.parent
+
 @st.cache_data
 def load_data():
-    df = pd.read_csv('./data/bike_data_processed.csv')
-    df['dteday'] = pd.to_datetime(df['dteday'])
-    return df
+    """Loads the main processed dataset."""
+    try:
+        data_path = script_dir / 'data/bike_data_processed.csv'
+        
+        df = pd.read_csv(data_path)
+        df['dteday'] = pd.to_datetime(df['dteday'])
+        return df
+        
+    except FileNotFoundError:
+        st.error("Error: The main data file ('bike_data_processed.csv') was not found.")
+        st.info("Please check that the file exists in the 'data' folder in your GitHub repo.")
+        return None  # Return None so the app can handle the missing data gracefully
+    except Exception as e:
+        st.error(f"An error occurred loading the data: {e}")
+        return None
 
 try:
     df = load_data()
@@ -150,7 +164,7 @@ try:
             st.metric("Evening Peak (5-7 PM)", f"{evening_peak:.0f} rentals")
         
         # Weekly patterns
-        st.markdown("### 📅 Weekly Patterns")
+        st.markdown("### Weekly Patterns")
         
         col1, col2 = st.columns(2)
         

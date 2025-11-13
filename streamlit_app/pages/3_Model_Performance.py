@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import joblib
+from pathlib import Path
 
 st.set_page_config(page_title="Model Performance", page_icon="🤖", layout="wide")
 
@@ -12,27 +13,54 @@ st.set_page_config(page_title="Model Performance", page_icon="🤖", layout="wid
 st.title("Model Performance Analysis")
 st.markdown("Compare different models and analyze prediction accuracy")
 
-# Load data
+script_dir = Path(__file__).parent.parent
+
 @st.cache_data
 def load_model_data():
-    model_results = pd.read_csv('./data/model_results.csv', index_col=0)
-    tuned_results = pd.read_csv('./data/tuned_model_results.csv', index_col=0)
-    predictions = pd.read_csv('./data/predictions.csv')
-    predictions['date'] = pd.to_datetime(predictions['date'])
-    
-    # Try to load feature importance
+    """Loads various CSV files for model analysis."""
     try:
-        feature_importance = pd.read_csv('./data/feature_importance.csv')
-    except:
-        feature_importance = None
-    
-    return model_results, tuned_results, predictions, feature_importance
+        path_model_results = script_dir / 'data/model_results.csv'
+        path_tuned_results = script_dir / 'data/tuned_model_results.csv'
+        path_predictions = script_dir / 'data/predictions.csv'
+        path_feature_imp = script_dir / 'data/feature_importance.csv'
+
+        model_results = pd.read_csv(path_model_results, index_col=0)
+        tuned_results = pd.read_csv(path_tuned_results, index_col=0)
+        predictions = pd.read_csv(path_predictions)
+        predictions['date'] = pd.to_datetime(predictions['date'])
+        
+        try:
+            feature_importance = pd.read_csv(path_feature_imp)
+        except FileNotFoundError:
+            st.warning("Feature importance file ('feature_importance.csv') not found. Continuing without it.")
+            feature_importance = None
+        except Exception as e:
+            st.warning(f"Could not load feature importance: {e}")
+            feature_importance = None
+        
+        return model_results, tuned_results, predictions, feature_importance
+
+    except FileNotFoundError as e:
+        st.error(f"Error: A required data file was not found.")
+        st.error(f"Details: {e}")
+        st.info("Please check the 'data' folder in your repo.")
+        return None, None, None, None 
+    except Exception as e:
+        st.error(f"An error occurred loading model data: {e}")
+        return None, None, None, None
 
 @st.cache_resource
 def load_model():
+    """Loads the pickled model file."""
     try:
-        return joblib.load('./models/best_model.pkl')
-    except:
+        model_path = script_dir / 'models/best_model.pkl'
+        return joblib.load(model_path)
+    except FileNotFoundError:
+        st.error("Error: The model file ('best_model.pkl') was not found.")
+        st.info("Please check the 'models' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading the model: {e}")
         return None
 
 # --- Main App Execution ---
@@ -306,7 +334,7 @@ with tab2:
                 st.plotly_chart(fig_radar, use_container_width=True)
             
             # Detailed metrics table
-            st.markdown("#### 📊 Metrics Comparison Table")
+            st.markdown("#### Metrics Comparison Table")
             
             # Format the dataframe for display
             formatted_df = comparison_df.copy()
@@ -330,7 +358,7 @@ with tab2:
             )
             
             # Metric explanations
-            with st.expander("📖 Metric Explanations"):
+            with st.expander("Metric Explanations"):
                 st.markdown("""
                 - **RMSE (Root Mean Square Error)**: Average prediction error in bikes/hour. Lower is better.
                 - **MAE (Mean Absolute Error)**: Average absolute prediction error. Less sensitive to outliers than RMSE.
