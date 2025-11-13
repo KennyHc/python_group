@@ -1,0 +1,2 @@
+total_records,train_size,test_size,avg_demand,peak_demand,best_model_name,best_rmse,best_r2,best_mae
+17379,15211,2168,189.46308763450142,977,LightGBM (tuned),67.14,0.8891,
