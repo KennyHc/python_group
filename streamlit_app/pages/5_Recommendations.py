@@ -75,15 +75,15 @@ try:
     
     # Strategic recommendations sections
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🚴 Operations Strategy",
-        "💰 Revenue Optimization",
-        "🌡️ Weather Response",
-        "📈 Growth Opportunities",
-        "🎯 Implementation Roadmap"
+        " Operations Strategy",
+        " Revenue Optimization",
+        " Weather Response",
+        " Growth Opportunities",
+        " Implementation Roadmap"
     ])
     
     with tab1:
-        st.markdown("## 🚴 Operational Recommendations")
+        st.markdown("##  Operational Recommendations")
         
         # Fleet management
         st.markdown("### 1. Dynamic Fleet Management")
@@ -126,7 +126,7 @@ try:
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            st.markdown("#### 📊 Fleet Sizing")
+            st.markdown("#### Fleet Sizing")
             
             max_concurrent = hourly_avg['recommended_bikes'].max()
             avg_concurrent = hourly_avg['recommended_bikes'].mean()
@@ -178,7 +178,7 @@ try:
             st.plotly_chart(fig_staff, use_container_width=True)
         
         with col2:
-            st.markdown("#### 👥 Staffing Guidelines")
+            st.markdown("####  Staffing Guidelines")
             
             # Identify peak periods
             workday_peaks = staff_data[1].nlargest(3)
@@ -209,7 +209,7 @@ try:
         """)
     
     with tab2:
-        st.markdown("## 💰 Revenue Optimization Strategies")
+        st.markdown("##  Revenue Optimization Strategies")
         
         # Pricing recommendations
         st.markdown("### 1. Dynamic Pricing Model")
@@ -244,7 +244,7 @@ try:
             st.plotly_chart(fig_pricing, use_container_width=True)
         
         with col2:
-            st.markdown("#### 💵 Pricing Tiers")
+            st.markdown("####  Pricing Tiers")
             
             st.info("""
             **Recommended Multipliers:**
@@ -306,7 +306,7 @@ try:
             st.plotly_chart(fig_users, use_container_width=True)
         
         with col2:
-            st.markdown("#### 🎯 Segment Strategies")
+            st.markdown("####  Segment Strategies")
             
             casual_weekend = df[df['workingday'] == 0]['casual'].sum()
             casual_weekday = df[df['workingday'] == 1]['casual'].sum()
@@ -354,7 +354,7 @@ try:
         st.plotly_chart(fig_opps, use_container_width=True)
     
     with tab3:
-        st.markdown("## 🌡️ Weather Response Strategy")
+        st.markdown("##  Weather Response Strategy")
         
         # Weather impact analysis
         st.markdown("### 1. Weather Impact Quantification")
@@ -393,7 +393,7 @@ try:
             st.plotly_chart(fig_weather, use_container_width=True)
         
         with col2:
-            st.markdown("#### 📉 Impact Metrics")
+            st.markdown("####  Impact Metrics")
             
             clear_demand = weather_stats.loc['Clear', ('cnt', 'mean')]
             rain_demand = weather_stats.loc['Light Rain/Snow', ('cnt', 'mean')]
@@ -516,7 +516,7 @@ try:
         
         with col1:
             st.info("""
-            **🏢 Geographic Expansion**
+            ** Geographic Expansion**
             - Business districts: +40% potential
             - University campuses: +30%
             - Tourist attractions: +25%
@@ -525,7 +525,7 @@ try:
         
         with col2:
             st.success("""
-            **🚴‍♀️ Service Expansion**
+            **🚴 Service Expansion**
             - E-bikes: Capture older demographics
             - Cargo bikes: Delivery partnerships
             - Kids bikes: Family packages
@@ -534,7 +534,7 @@ try:
         
         with col3:
             st.warning("""
-            **🤝 Partnership Opportunities**
+            ** Partnership Opportunities**
             - Transit integration: First/last mile
             - Hotel partnerships: Tourist packages
             - Corporate wellness programs
@@ -581,37 +581,37 @@ try:
         st.plotly_chart(fig_penetration, use_container_width=True)
     
     with tab5:
-        st.markdown("## 🎯 Implementation Roadmap")
+        st.markdown("##  Implementation Roadmap")
         
         # Phased implementation
-        st.markdown("### 📅 90-Day Quick Wins")
+        st.markdown("###  90-Day Quick Wins")
         
         col1, col2 = st.columns(2)
         
         with col1:
             st.success("""
             **Month 1: Immediate Actions**
-            - ✅ Implement dynamic fleet redistribution
-            - ✅ Optimize maintenance windows
-            - ✅ Launch weather-based communications
-            - ✅ Start A/B testing pricing tiers
+            -  Implement dynamic fleet redistribution
+            -  Optimize maintenance windows
+            -  Launch weather-based communications
+            -  Start A/B testing pricing tiers
             """)
             
             st.info("""
             **Month 2: System Enhancements**
-            - 📱 Deploy predictive demand app for staff
-            - 📊 Create real-time dashboards
-            - 🤝 Initiate corporate partnerships
-            - 📈 Launch customer segmentation campaigns
+            - Deploy predictive demand app for staff
+            - Create real-time dashboards
+            - Initiate corporate partnerships
+            - Launch customer segmentation campaigns
             """)
         
         with col2:
             st.warning("""
             **Month 3: Scale & Optimize**
-            - 🚀 Full dynamic pricing rollout
-            - 🏪 Expand to 2 new locations
-            - 💳 Launch subscription tiers
-            - 📊 Measure and refine all initiatives
+            -  Full dynamic pricing rollout
+            -  Expand to 2 new locations
+            -  Launch subscription tiers
+            -  Measure and refine all initiatives
             """)
             
             # Expected impact
@@ -628,7 +628,7 @@ try:
                 st.metric(metric, value)
         
         # Long-term vision
-        st.markdown("### 🔮 12-Month Vision")
+        st.markdown("### 12-Month Vision")
         
         # Create timeline
         timeline_data = {
@@ -675,7 +675,7 @@ try:
         st.plotly_chart(fig_timeline, use_container_width=True)
         
         # Success metrics
-        st.markdown("### 📊 Success Metrics & KPIs")
+        st.markdown("### Success Metrics & KPIs")
         
         col1, col2, col3 = st.columns(3)
         
@@ -693,20 +693,20 @@ try:
         
         # Final recommendations
         st.markdown("---")
-        st.markdown("### 🎯 Key Takeaways")
+        st.markdown("### Key Takeaways")
         
         st.success("""
         **Top 5 Priority Actions:**
         
-        1. **🚴 Dynamic Fleet Management**: Implement ML-based redistribution to reduce stockouts by 40%
+        1. ** Dynamic Fleet Management**: Implement ML-based redistribution to reduce stockouts by 40%
         
-        2. **💰 Smart Pricing**: Roll out time and weather-based pricing for 15% revenue uplift
+        2. ** Smart Pricing**: Roll out time and weather-based pricing for 15% revenue uplift
         
-        3. **🤝 Corporate Partnerships**: Target top 50 employers for commuter programs
+        3. ** Corporate Partnerships**: Target top 50 employers for commuter programs
         
-        4. **📱 Digital Enhancement**: Launch predictive app for staff and customers
+        4. ** Digital Enhancement**: Launch predictive app for staff and customers
         
-        5. **📍 Strategic Expansion**: Focus on high-demand corridors identified by the model
+        5. ** Strategic Expansion**: Focus on high-demand corridors identified by the model
         
         **Remember**: The model shows hour of day as the #1 predictor - optimize everything around temporal patterns!
         """)
