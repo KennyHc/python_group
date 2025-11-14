@@ -92,6 +92,16 @@ def load_processed_data():
 # Main page content
 st.markdown('<h1 class="main-header"> Bike Sharing Demand Analysis Dashboard</h1>', unsafe_allow_html=True)
 
+image_path = script_dir / 'bikes.jpg'
+
+try:
+    st.image(str(image_path), 
+            caption="Bike Sharing Is Recomended by Group 1!", 
+            use_column_width=True) 
+except FileNotFoundError:
+    st.error("Header image not found.")
+
+
 # Load data
 try:
     stats = load_summary_stats()
