@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-script_dir = Path(__file__).parent.parent
+script_dir = Path(__file__).parent
 
 # Custom CSS for better styling
 st.markdown("""
