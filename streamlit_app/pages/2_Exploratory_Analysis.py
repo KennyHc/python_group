@@ -624,22 +624,18 @@ try:
         st.plotly_chart(fig_scatter, use_container_width=True)
     
     with tab5:
-        st.markdown("## 📊 Advanced Analysis")
+        st.markdown("## Advanced Analysis")
+   
+        st.markdown("###  Year-over-Year Growth Analysis")
         
-        # Year-over-year growth
-        st.markdown("### 📈 Year-over-Year Growth Analysis")
-        
-        # Calculate YoY metrics
         yoy_data = df.groupby(['yr', 'mnth']).agg({
             'cnt': 'sum',
             'casual': 'sum',
             'registered': 'sum'
         }).reset_index()
         
-        # Pivot for comparison
         yoy_pivot = yoy_data.pivot(index='mnth', columns='yr', values=['cnt', 'casual', 'registered'])
         
-        # Calculate growth rates
         growth_rates = pd.DataFrame({
             'Month': range(1, 13),
             'Total Growth %': ((yoy_pivot['cnt'][1] / yoy_pivot['cnt'][0] - 1) * 100).round(1),
@@ -686,7 +682,7 @@ try:
             st.metric("2012 Total", f"{total_2012:,} rentals")
         
         # Demand forecasting insights
-        st.markdown("### 🔮 Demand Pattern Insights")
+        st.markdown("### Demand Pattern Insights")
         
         # Calculate some advanced metrics
         # Weekday vs weekend ratio
@@ -704,13 +700,13 @@ try:
         weather_impact = ((clear_avg - bad_weather_avg) / clear_avg * 100)
         
         # Display insights
-        st.markdown("#### 🎯 Key Operational Insights")
+        st.markdown("####  Key Operational Insights")
         
         insight_col1, insight_col2 = st.columns(2)
         
         with insight_col1:
             st.info(f"""
-            **📊 Demand Concentration**
+            ** Demand Concentration**
             - Top 3 hours account for {peak_concentration:.1f}% of daily demand
             - Peak hours: {', '.join([f"{h}:00" for h in top_3_hours.index])}
             - Weekday demand is {(weekday_avg/weekend_avg):.1f}x weekend demand
@@ -718,7 +714,7 @@ try:
         
         with insight_col2:
             st.warning(f"""
-            **🌦️ Weather Sensitivity**
+            ** Weather Sensitivity**
             - Bad weather reduces demand by {weather_impact:.1f}%
             - Temperature explains {(df['temp'].corr(df['cnt'])**2 * 100):.1f}% of variance
             - Optimal operations window: 20-30°C, low humidity

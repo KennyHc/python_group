@@ -1,10 +1,4 @@
-# 🚀 QUICK START GUIDE - Bike Sharing Dashboard
-
-## ✅ Your Streamlit App is Ready!
-
-All files have been created and organized in the `streamlit_app/` folder.
-
-### 📁 What Was Created:
+All in the `streamlit_app/` folder.
 
 1. **Main Application Files:**
    - `app.py` - Main dashboard with overview and KPIs
@@ -14,17 +8,17 @@ All files have been created and organized in the `streamlit_app/` folder.
    - `run_app.sh` - Easy run script
 
 2. **Dashboard Pages (in `pages/` folder):**
-   - `1_📊_Data_Overview.py` - Data quality and statistics
-   - `2_🔍_Exploratory_Analysis.py` - Interactive EDA
-   - `3_🤖_Model_Performance.py` - Model comparison
-   - `4_🔮_Predictions.py` - Real-time predictions
-   - `5_💡_Recommendations.py` - Business insights
+   - `1_Data_Overview.py` - Data quality and statistics
+   - `2_Exploratory_Analysis.py` - Interactive EDA
+   - `3_Model_Performance.py` - Model comparison
+   - `4_Predictions.py` - Real-time predictions
+   - `5_Recommendations.py` - Business insights
 
 3. **Data Structure (empty folders):**
    - `data/` - For your exported CSV files
    - `models/` - For your saved model files
 
-### 🏃 Quick Start Steps:
+### Quick Start Steps:
 
 1. **In Your Jupyter Notebook**, add and run this export code:
 ```python
@@ -82,7 +76,7 @@ summary_stats = {
 }
 pd.DataFrame([summary_stats]).to_csv('streamlit_app/data/summary_stats.csv', index=False)
 
-print("✅ All files exported successfully!")
+print(" All files exported successfully!")
 ```
 
 2. **Navigate to the app folder:**
@@ -97,39 +91,30 @@ pip install -r requirements.txt
 
 4. **Run the app:**
 ```bash
-# Option 1: Use the run script
-./run_app.sh
-
-# Option 2: Direct streamlit command
-streamlit run app.py
-
-# Option 3: Check setup first
-python check_setup.py
 streamlit run app.py
 ```
 
-### 🎯 Features Implemented:
+### Features Implemented:
 
-✅ **Multi-page navigation** with sidebar
-✅ **Interactive Plotly charts** throughout
-✅ **Real-time predictions** with sliders and inputs
-✅ **Batch prediction** via CSV upload
-✅ **What-if scenarios** for business planning
-✅ **Comprehensive business recommendations**
-✅ **Model performance comparison**
-✅ **Feature importance visualization**
-✅ **Weather and temporal analysis**
-✅ **User segmentation insights**
+ **Multi-page navigation** with sidebar
+ **Interactive Plotly charts** throughout
+ **Real-time predictions** with sliders and inputs
+ **Batch prediction** via CSV upload
+ **What-if scenarios** for business planning
+ **Comprehensive business recommendations**
+ **Model performance comparison**
+ **Feature importance visualization**
+ **Weather and temporal analysis**
+ **User segmentation insights**
 
-### 📝 Notes:
+###  Notes:
 
-- The app uses relative paths (`../data/`) to find data files
 - All visualizations are interactive (zoom, pan, hover)
 - The predictions page includes scenario analysis
 - Business recommendations are data-driven
 - Color coding helps identify patterns quickly
 
-### 🔧 Customization:
+###  Customization:
 
 Feel free to modify:
 - Color schemes in Plotly charts
@@ -138,12 +123,10 @@ Feel free to modify:
 - Extend the prediction features
 - Add more business rules
 
-### ❓ Troubleshooting:
+### Troubleshooting:
 
 If you encounter issues:
 1. Run `python check_setup.py` to verify all files
 2. Ensure all CSV exports completed successfully
 3. Check that model pickle files are compatible
 4. Use virtual environment to avoid conflicts
-
-Enjoy your interactive bike-sharing dashboard! 🚴‍♀️📊
