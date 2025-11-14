@@ -166,9 +166,9 @@ try:
         
     # Prediction modes
     tab1, tab2, tab3 = st.tabs([
-        "🔮 Single Prediction",
-        "📊 Batch Predictions",
-        "📈 What-If Scenarios"
+        " Single Prediction",
+        " Batch Predictions",
+        " What-If Scenarios"
     ])
     
     # --- TAB 1: SINGLE PREDICTION (FIXED) ---

@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
+from pathlib import Path
 
 # Page configuration
 st.set_page_config(
@@ -11,6 +12,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+script_dir = Path(__file__).parent.parent
 
 # Custom CSS for better styling
 st.markdown("""
@@ -54,17 +57,40 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Load data
 @st.cache_data
 def load_summary_stats():
-    return pd.read_csv('data/summary_stats.csv')
+    """Loads the summary statistics file."""
+    try:
+
+        path_summary = script_dir / 'data/summary_stats.csv'
+        return pd.read_csv(path_summary)
+        
+    except FileNotFoundError:
+        st.error("Error: The summary statistics file ('summary_stats.csv') was not found.")
+        st.info("Please check the 'data' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading summary stats: {e}")
+        return None
 
 @st.cache_data
 def load_processed_data():
-    return pd.read_csv('data/bike_data_processed.csv')
+    """Loads the processed dataset."""
+    try:
+
+        path_processed = script_dir / 'data/bike_data_processed.csv'
+        return pd.read_csv(path_processed)
+        
+    except FileNotFoundError:
+        st.error("Error: The processed data file ('bike_data_processed.csv') was not found.")
+        st.info("Please check the 'data' folder in your repo.")
+        return None
+    except Exception as e:
+        st.error(f"An error occurred loading processed data: {e}")
+        return None
 
 # Main page content
-st.markdown('<h1 class="main-header">🚴 Bike Sharing Demand Analysis Dashboard</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header"> Bike Sharing Demand Analysis Dashboard</h1>', unsafe_allow_html=True)
 
 # Load data
 try:
@@ -161,7 +187,7 @@ try:
     
     # Key Insights Section
     st.markdown("---")
-    st.markdown("## 💡 Key Insights from Analysis")
+    st.markdown("## Key Insights from Analysis")
     
     col1, col2, col3 = st.columns(3)
     
@@ -208,11 +234,11 @@ try:
     st.info("""
     **Explore the complete analysis using the sidebar navigation:**
     
-    1. **📊 Data Overview** - Examine data quality, missing values, and basic statistics
-    2. **🔍 Exploratory Analysis** - Interactive visualizations of demand patterns and relationships
-    3. **🤖 Model Performance** - Compare different models and see detailed performance metrics
-    4. **🔮 Predictions** - Make real-time predictions with custom inputs
-    5. **💡 Recommendations** - Business insights and actionable recommendations
+    1. ** Data Overview** - Examine data quality, missing values, and basic statistics
+    2. ** Exploratory Analysis** - Interactive visualizations of demand patterns and relationships
+    3. ** Model Performance** - Compare different models and see detailed performance metrics
+    4. ** Predictions** - Make real-time predictions with custom inputs
+    5. ** Recommendations** - Business insights and actionable recommendations
     """)
     
     # Year comparison
