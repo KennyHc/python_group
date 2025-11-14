@@ -8,3 +8,4 @@ joblib
 pathlib
 lightgbm
 datetime
+statsmodels

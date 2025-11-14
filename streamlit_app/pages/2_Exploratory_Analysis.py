@@ -90,7 +90,7 @@ try:
         st.markdown("## 📅 Temporal Patterns Analysis")
         
         # Hourly patterns
-        st.markdown("### ⏰ Hourly Demand Patterns")
+        st.markdown("### Hourly Demand Patterns")
         
         # Add day type filter
         day_type_filter = st.selectbox(
@@ -263,7 +263,7 @@ try:
         st.markdown("## 🌡️ Weather Impact Analysis")
         
         # Temperature impact
-        st.markdown("### 🌡️ Temperature vs Demand")
+        st.markdown("### Temperature vs Demand")
         
         col1, col2 = st.columns([2, 1])
         
