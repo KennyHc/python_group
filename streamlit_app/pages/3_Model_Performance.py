@@ -6,11 +6,16 @@ from plotly.subplots import make_subplots
 import numpy as np
 import joblib
 from pathlib import Path
+from utils import load_css
 
-st.set_page_config(page_title="Model Performance", page_icon="🤖", layout="wide")
 
-# Title
-st.title("Model Performance Analysis")
+# page_icon must remain an emoji or file path (Material icons don't work in browser tabs)
+st.set_page_config(page_title="Model Performance", page_icon="📊", layout="wide")
+
+load_css()
+
+# Title with Material Icon
+st.title(":material/assessment: Model Performance Analysis")
 st.markdown("Compare different models and analyze prediction accuracy")
 
 script_dir = Path(__file__).parent.parent
@@ -32,21 +37,21 @@ def load_model_data():
         try:
             feature_importance = pd.read_csv(path_feature_imp)
         except FileNotFoundError:
-            st.warning("Feature importance file ('feature_importance.csv') not found. Continuing without it.")
+            st.warning("Feature importance file ('feature_importance.csv') not found. Continuing without it.", icon=":material/warning:")
             feature_importance = None
         except Exception as e:
-            st.warning(f"Could not load feature importance: {e}")
+            st.warning(f"Could not load feature importance: {e}", icon=":material/warning:")
             feature_importance = None
         
         return model_results, tuned_results, predictions, feature_importance
 
     except FileNotFoundError as e:
-        st.error(f"Error: A required data file was not found.")
-        st.error(f"Details: {e}")
-        st.info("Please check the 'data' folder in your repo.")
+        st.error(f"Error: A required data file was not found.", icon=":material/error:")
+        st.error(f"Details: {e}", icon=":material/error:")
+        st.info("Please check the 'data' folder in your repo.", icon=":material/info:")
         return None, None, None, None 
     except Exception as e:
-        st.error(f"An error occurred loading model data: {e}")
+        st.error(f"An error occurred loading model data: {e}", icon=":material/error:")
         return None, None, None, None
 
 @st.cache_resource
@@ -56,11 +61,11 @@ def load_model():
         model_path = script_dir / 'models/best_model.pkl'
         return joblib.load(model_path)
     except FileNotFoundError:
-        st.error("Error: The model file ('best_model.pkl') was not found.")
-        st.info("Please check the 'models' folder in your repo.")
+        st.error("Error: The model file ('best_model.pkl') was not found.", icon=":material/error:")
+        st.info("Please check the 'models' folder in your repo.", icon=":material/info:")
         return None
     except Exception as e:
-        st.error(f"An error occurred loading the model: {e}")
+        st.error(f"An error occurred loading the model: {e}", icon=":material/error:")
         return None
 
 # --- Main App Execution ---
@@ -76,24 +81,24 @@ try:
     best_r2 = tuned_results.loc[best_model_name, 'R²']
     
 except Exception as e:
-    st.error(f"Fatal Error: Failed to load core model data: {str(e)}")
-    st.info("Please ensure all data files (model_results.csv, tuned_model_results.csv, predictions.csv) are present in the './data' directory.")
+    st.error(f"Fatal Error: Failed to load core model data: {str(e)}", icon=":material/report:")
+    st.info("Please ensure all data files are present in the './data' directory.", icon=":material/help:")
     st.stop() # Stop execution if data loading fails
 
 
 # 2. Model Comparison Section (Tabs)
-st.markdown("## Model Comparison")
+st.markdown("## :material/compare: Model Comparison")
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "Performance Overview",
-    "Detailed Metrics",
-    "Prediction Analysis",
-    "Feature Importance"
+    ":material/dashboard: Performance Overview",
+    ":material/table_view: Detailed Metrics",
+    ":material/query_stats: Prediction Analysis",
+    ":material/key: Feature Importance"
 ])
 
 with tab1:
     try:
-        st.markdown("### Model Performance Overview")
+        st.markdown("### :material/speed: Model Performance Overview")
         
         # Combine baseline and tuned results
         all_results = pd.concat([model_results, tuned_results])
@@ -115,11 +120,9 @@ with tab1:
             # RMSE comparison
             fig_rmse = go.Figure()
 
-
             # Separate baseline and tuned models.
             baseline_models = model_results.index.tolist()
             tuned_models = tuned_results.index.tolist()
-
             
             # Plot baseline models
             if baseline_models:
@@ -198,14 +201,14 @@ with tab1:
         
         # Best model highlight
         st.success(f"""
-        🏆 **Best Model: {best_model_name}**
+        **Best Model: {best_model_name}**
         - RMSE: {best_rmse:.2f} bikes
         - R² Score: {best_r2:.4f} ({best_r2*100:.2f}% variance explained)
         - Average prediction error: ±{best_rmse:.0f} bikes per hour
-        """)
+        """, icon=":material/trophy:")
         
         # Model improvement analysis
-        st.markdown("### 📈 Model Improvement Through Tuning")
+        st.markdown("### :material/trending_up: Model Improvement Through Tuning")
         
         improvement_data = []
         for model_base in ['XGBoost', 'LightGBM', 'CatBoost']:
@@ -270,11 +273,11 @@ with tab1:
                         delta_color="normal" if row['Improvement %'] > 0 else "inverse"
                     )
     except Exception as e:
-        st.error(f"Error loading 'Performance Overview' tab: {e}")
+        st.error(f"Error loading 'Performance Overview' tab: {e}", icon=":material/error:")
 
 with tab2:
     try:
-        st.markdown("### 🎯 Detailed Performance Metrics")
+        st.markdown("### :material/analytics: Detailed Performance Metrics")
         
         all_results = pd.concat([model_results, tuned_results])
         display_cols = [col for col in ['RMSE', 'R²', 'MAE', 'MAPE'] if col in all_results.columns]
@@ -304,7 +307,7 @@ with tab2:
                         if metric in ['RMSE', 'MAE']:  # Lower is better
                             # Handle case where max and min are the same (prevents division by zero)
                             if (comparison_df.loc[metric].max() - comparison_df.loc[metric].min()) == 0:
-                                normalized = 0.5 # or 1.0, depending on preference
+                                normalized = 0.5 
                             else:
                                 normalized = 1 - (val - comparison_df.loc[metric].min()) / (comparison_df.loc[metric].max() - comparison_df.loc[metric].min())
                         else:  # Higher is better (R²)
@@ -334,7 +337,7 @@ with tab2:
                 st.plotly_chart(fig_radar, use_container_width=True)
             
             # Detailed metrics table
-            st.markdown("#### Metrics Comparison Table")
+            st.markdown("#### :material/grid_on: Metrics Comparison Table")
             
             # Format the dataframe for display
             formatted_df = comparison_df.copy()
@@ -358,7 +361,7 @@ with tab2:
             )
             
             # Metric explanations
-            with st.expander("Metric Explanations"):
+            with st.expander("Metric Explanations", icon=":material/help_outline:"):
                 st.markdown("""
                 - **RMSE (Root Mean Square Error)**: Average prediction error in bikes/hour. Lower is better.
                 - **MAE (Mean Absolute Error)**: Average absolute prediction error. Less sensitive to outliers than RMSE.
@@ -367,7 +370,7 @@ with tab2:
                 """)
         
         # Business context
-        st.markdown("### 💼 Business Context")
+        st.markdown("### :material/business_center: Business Context")
         
         col1, col2 = st.columns(2)
         
@@ -381,7 +384,7 @@ with tab2:
             - Prediction error: ±{best_rmse:.0f} bikes
             - Error as % of average: {error_pct:.1f}%
             - 95% confidence interval: ±{best_rmse*1.96:.0f} bikes
-            """)
+            """, icon=":material/info:")
         
         with col2:
             capacity_buffer = best_rmse * 2  # 2 standard deviations
@@ -392,21 +395,21 @@ with tab2:
             - Focus on peak hours (8-9 AM, 5-6 PM)
             - Monitor weather forecasts for demand spikes
             - Consider {error_pct:.0f}% margin in capacity planning
-            """)
+            """, icon=":material/lightbulb:")
     except Exception as e:
-        st.error(f"Error loading 'Detailed Metrics' tab: {e}")
+        st.error(f"Error loading 'Detailed Metrics' tab: {e}", icon=":material/error:")
 
 with tab3:
     try:
-        st.markdown("### 🔬 Prediction Analysis")
+        st.markdown("### :material/science: Prediction Analysis")
         
         # Check if required columns exist
         required_cols = ['actual', 'predicted', 'residual', 'date', 'hour', 'weather', 'temp']
         if not all(col in predictions.columns for col in required_cols):
-            st.warning(f"Prediction data is missing one of the required columns: {required_cols}")
+            st.warning(f"Prediction data is missing one of the required columns: {required_cols}", icon=":material/warning:")
         else:
             # Actual vs Predicted
-            st.markdown("#### Actual vs Predicted Values")
+            st.markdown("#### :material/linear_scale: Actual vs Predicted Values")
             
             # Add perfect prediction line
             fig_pred = go.Figure()
@@ -419,7 +422,7 @@ with tab3:
                 x=[min_val, max_val],
                 y=[min_val, max_val],
                 mode='lines',
-                name='Perfect Prediction',
+                name='',
                 line=dict(color='red', dash='dash'),
                 showlegend=True
             ))
@@ -429,7 +432,7 @@ with tab3:
                 x=predictions['actual'],
                 y=predictions['predicted'],
                 mode='markers',
-                name='Predictions',
+                name='',
                 marker=dict(
                     size=5,
                     color=predictions['residual'].abs(),
@@ -517,7 +520,7 @@ with tab3:
                 st.plotly_chart(fig_residual_time, use_container_width=True)
             
             # Error analysis by conditions
-            st.markdown("#### 🎯 Error Analysis by Conditions")
+            st.markdown("#### :material/fact_check: Error Analysis by Conditions")
             
             col1, col2 = st.columns(2)
             
@@ -573,7 +576,7 @@ with tab3:
                 st.plotly_chart(fig_weather_error, use_container_width=True)
             
             # Worst predictions analysis
-            st.markdown("#### ⚠️ Largest Prediction Errors")
+            st.markdown("#### :material/warning: Largest Prediction Errors")
             
             # Find worst over and under predictions
             worst_over = predictions.nlargest(5, 'residual')[['date', 'actual', 'predicted', 'residual', 'weather', 'temp']]
@@ -597,11 +600,11 @@ with tab3:
                     hide_index=True
                 )
     except Exception as e:
-        st.error(f"Error loading 'Prediction Analysis' tab: {e}")
+        st.error(f"Error loading 'Prediction Analysis' tab: {e}", icon=":material/error:")
 
 with tab4:
     try:
-        st.markdown("### 🌟 Feature Importance Analysis")
+        st.markdown("### :material/stars: Feature Importance Analysis")
         
         if feature_importance is not None and len(feature_importance) > 0:
             # Top features bar chart
@@ -642,7 +645,7 @@ with tab4:
             st.plotly_chart(fig_importance, use_container_width=True)
             
             # Feature importance by category
-            st.markdown("#### 📊 Feature Importance by Category")
+            st.markdown("#### :material/category: Feature Importance by Category")
             
             # Categorize features
             categories = {
@@ -684,7 +687,7 @@ with tab4:
                         st.caption(f"Top: {stats['Top Feature']}")
             
             # Feature importance insights
-            st.markdown("#### 💡 Key Feature Insights")
+            st.markdown("#### :material/lightbulb: Key Feature Insights")
             
             top_feature = feature_importance.iloc[0]['Feature']
             top_importance = feature_importance.iloc[0]['Importance']
@@ -695,7 +698,7 @@ with tab4:
             - **Temporal features** dominate predictions, confirming strong time-based patterns
             - **Temperature** is the most important weather factor
             - **Engineered features** add significant value, validating feature engineering efforts
-            """)
+            """, icon=":material/info:")
             
             # Feature correlation with target
             if st.checkbox("Show feature correlations with target"):
@@ -703,9 +706,9 @@ with tab4:
                 st.info("""
                 Feature correlations help understand linear relationships between features and the target.
                 The feature importance from tree-based models captures both linear and non-linear relationships.
-                """)
+                """, icon=":material/info:")
         else:
-            st.warning("Feature importance data ('./data/feature_importance.csv') not found or is empty.")
+            st.warning("Feature importance data ('./data/feature_importance.csv') not found or is empty.", icon=":material/warning:")
             
             st.info("""
             **Why Feature Importance Matters:**
@@ -713,17 +716,17 @@ with tab4:
             - Helps focus business decisions on high-impact areas
             - Validates the feature engineering process
             - Guides future data collection efforts
-            """)
+            """, icon=":material/info:")
     except Exception as e:
-        st.error(f"Error loading 'Feature Importance' tab: {e}")
+        st.error(f"Error loading 'Feature Importance' tab: {e}", icon=":material/error:")
 
 
 # 3. Model Card Section
 st.markdown("---")
-st.markdown("## 📋 Model Card")
+st.markdown("## :material/description: Model Card")
 
 try:
-    with st.expander("View Model Documentation"):
+    with st.expander("View Model Documentation", icon=":material/visibility:"):
         
         performance_summary = [
             f"- **RMSE**: {best_rmse:.2f} bikes/hour",
@@ -778,4 +781,4 @@ try:
         - Consider ensemble predictions during peak hours
         """)
 except Exception as e:
-    st.error(f"Error loading Model Card: {e}")
+    st.error(f"Error loading Model Card: {e}", icon=":material/error:")

@@ -5,14 +5,30 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 from pathlib import Path
+from utils import load_css
 
+# Note: page_icon best supports emojis for the browser tab
 st.set_page_config(page_title="Exploratory Analysis", page_icon="🔍", layout="wide")
 
-# Title
-st.title("Exploratory Data Analysis")
+load_css()
+
+
+# Title with Material Icon
+st.title(":material/analytics: Exploratory Data Analysis")
 st.markdown("Discover patterns, trends, and relationships in bike-sharing demand")
 
 script_dir = Path(__file__).parent.parent
+
+# --- COLOR PALETTE FOR DARK MODE ---
+COLORS = {
+    'cyan': '#00F0FF',
+    'pink': '#FF007A',
+    'purple': '#9D00FF',
+    'amber': '#FFBC00',
+    'green': '#00FF94',
+    'slate': '#8892b0',
+    'dark_bg': '#0e1117'
+}
 
 @st.cache_data
 def load_data():
@@ -27,7 +43,7 @@ def load_data():
     except FileNotFoundError:
         st.error("Error: The main data file ('bike_data_processed.csv') was not found.")
         st.info("Please check that the file exists in the 'data' folder in your GitHub repo.")
-        return None  # Return None so the app can handle the missing data gracefully
+        return None
     except Exception as e:
         st.error(f"An error occurred loading the data: {e}")
         return None
@@ -47,7 +63,7 @@ try:
     df['day_type'] = df['workingday'].map({0: 'Holiday/Weekend', 1: 'Working Day'})
     
     # Sidebar filters
-    st.sidebar.markdown("## 🎛️ Filters")
+    st.sidebar.markdown("## :material/tune: Filters")
     
     # Date range filter
     date_range = st.sidebar.date_input(
@@ -77,20 +93,20 @@ try:
     else:
         df_filtered = df.copy()
     
-    # Analysis sections
+    # Analysis sections with Material Icons in Tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Temporal Patterns",
-        "Weather Impact",
-        "User Behavior",
-        "Correlations",
-        "Advanced Analysis"
+        ":material/schedule: Temporal Patterns",
+        ":material/thermostat: Weather Impact",
+        ":material/groups: User Behavior",
+        ":material/hub: Correlations",
+        ":material/science: Advanced Analysis"
     ])
     
     with tab1:
-        st.markdown("## 📅 Temporal Patterns Analysis")
+        st.markdown("## :material/calendar_month: Temporal Patterns Analysis")
         
         # Hourly patterns
-        st.markdown("### Hourly Demand Patterns")
+        st.markdown("### :material/access_time: Hourly Demand Patterns")
         
         # Add day type filter
         day_type_filter = st.selectbox(
@@ -109,33 +125,33 @@ try:
         
         fig_hourly = go.Figure()
         
-        # Add mean line
+        # Add mean line (Bright Cyan)
         fig_hourly.add_trace(go.Scatter(
             x=hourly_avg['hr'],
             y=hourly_avg['mean'],
             mode='lines+markers',
             name='Average',
-            line=dict(color='blue', width=3),
-            marker=dict(size=8)
+            line=dict(color=COLORS['cyan'], width=3),
+            marker=dict(size=8, color=COLORS['dark_bg'], line=dict(width=2, color=COLORS['cyan']))
         ))
         
-        # Add confidence interval
+        # Add confidence interval (Cyan with transparency)
         fig_hourly.add_trace(go.Scatter(
             x=hourly_avg['hr'].tolist() + hourly_avg['hr'].tolist()[::-1],
             y=(hourly_avg['mean'] + hourly_avg['std']).tolist() + 
               (hourly_avg['mean'] - hourly_avg['std']).tolist()[::-1],
             fill='toself',
-            fillcolor='rgba(0,100,255,0.2)',
+            fillcolor='rgba(0, 240, 255, 0.1)', # Cyan transparent
             line=dict(color='rgba(255,255,255,0)'),
             hoverinfo="skip",
             showlegend=False
         ))
         
-        # Highlight rush hours
+        # Highlight rush hours (Amber/Yellow)
         for hour in [8, 9, 17, 18]:
             fig_hourly.add_vrect(
                 x0=hour-0.5, x1=hour+0.5,
-                fillcolor="orange", opacity=0.2,
+                fillcolor=COLORS['amber'], opacity=0.15,
                 layer="below", line_width=0
             )
         
@@ -155,16 +171,17 @@ try:
         
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Peak Hour", f"{peak_hour}:00", f"{peak_value:.0f} avg rentals")
+            st.metric(":material/vertical_align_top: Peak Hour", f"{peak_hour}:00", f"{peak_value:.0f} avg rentals")
         with col2:
             morning_peak = hourly_avg[(hourly_avg['hr'] >= 7) & (hourly_avg['hr'] <= 9)]['mean'].max()
-            st.metric("Morning Peak (7-9 AM)", f"{morning_peak:.0f} rentals")
+            st.metric(":material/wb_twilight: Morning Peak (7-9 AM)", f"{morning_peak:.0f} rentals")
         with col3:
             evening_peak = hourly_avg[(hourly_avg['hr'] >= 17) & (hourly_avg['hr'] <= 19)]['mean'].max()
-            st.metric("Evening Peak (5-7 PM)", f"{evening_peak:.0f} rentals")
+            st.metric(":material/wb_twilight: Evening Peak (5-7 PM)", f"{evening_peak:.0f} rentals")
         
         # Weekly patterns
-        st.markdown("### Weekly Patterns")
+        st.divider()
+        st.markdown("### :material/date_range: Weekly Patterns")
         
         col1, col2 = st.columns(2)
         
@@ -176,10 +193,13 @@ try:
                 4: 'Thursday', 5: 'Friday', 6: 'Saturday'
             })
             
+            # Weekend = Pink, Weekday = Muted Cyan
+            bar_colors = [COLORS['pink'] if i in [0, 6] else 'rgba(0, 240, 255, 0.6)' for i in range(7)]
+            
             fig_weekday = go.Figure([go.Bar(
                 x=weekday_avg['day_name'],
                 y=weekday_avg[selected_col],
-                marker_color=['orange' if i in [0, 6] else 'lightblue' for i in range(7)],
+                marker_color=bar_colors,
                 text=weekday_avg[selected_col].round(0),
                 textposition='auto'
             )])
@@ -201,6 +221,9 @@ try:
             
             fig_monthly = go.Figure()
             
+            # 2011 (Gray/Slate), 2012 (Neon Green)
+            colors_year = {'2011': COLORS['slate'], '2012': COLORS['green']}
+            
             for year in ['2011', '2012']:
                 year_data = monthly_avg[monthly_avg['year'] == year]
                 fig_monthly.add_trace(go.Scatter(
@@ -208,7 +231,7 @@ try:
                     y=year_data[selected_col],
                     mode='lines+markers',
                     name=year,
-                    line=dict(width=3),
+                    line=dict(width=3, color=colors_year[year]),
                     marker=dict(size=8)
                 ))
             
@@ -223,7 +246,7 @@ try:
             st.plotly_chart(fig_monthly, use_container_width=True)
         
         # Seasonal patterns
-        st.markdown("### 🍂 Seasonal Analysis")
+        st.markdown("### :material/eco: Seasonal Analysis")
         
         seasonal_stats = df_filtered.groupby('season_name')[selected_col].agg(['mean', 'sum', 'std']).round(0)
         seasonal_stats['cv'] = (seasonal_stats['std'] / seasonal_stats['mean'] * 100).round(1)
@@ -231,12 +254,15 @@ try:
         col1, col2 = st.columns(2)
         
         with col1:
+            # Custom seasonal palette
+            season_colors = [COLORS['cyan'], COLORS['green'], COLORS['amber'], COLORS['pink']]
+            
             fig_season = go.Figure([go.Bar(
                 x=seasonal_stats.index,
                 y=seasonal_stats['mean'],
                 text=seasonal_stats['mean'].astype(int),
                 textposition='auto',
-                marker_color=['lightblue', 'lightgreen', 'yellow', 'orange']
+                marker_color=season_colors
             )])
             
             fig_season.update_layout(
@@ -256,14 +282,14 @@ try:
             best_season = seasonal_stats['mean'].idxmax()
             worst_season = seasonal_stats['mean'].idxmin()
             
-            st.success(f"🏆 Best season: **{best_season}** ({seasonal_stats.loc[best_season, 'mean']:.0f} avg rentals)")
-            st.info(f"📉 Lowest season: **{worst_season}** ({seasonal_stats.loc[worst_season, 'mean']:.0f} avg rentals)")
+            st.success(f":material/trophy: Best season: **{best_season}** ({seasonal_stats.loc[best_season, 'mean']:.0f} avg rentals)")
+            st.info(f":material/trending_down: Lowest season: **{worst_season}** ({seasonal_stats.loc[worst_season, 'mean']:.0f} avg rentals)")
     
     with tab2:
-        st.markdown("## 🌡️ Weather Impact Analysis")
+        st.markdown("## :material/thermostat: Weather Impact Analysis")
         
         # Temperature impact
-        st.markdown("### Temperature vs Demand")
+        st.markdown("### :material/thermometer: Temperature vs Demand")
         
         col1, col2 = st.columns([2, 1])
         
@@ -277,26 +303,26 @@ try:
             
             fig_temp = go.Figure()
             
-            # Scatter plot with all points
+            # Scatter plot: Transparent Cyan
             fig_temp.add_trace(go.Scatter(
                 x=df_filtered['temp_celsius'],
                 y=df_filtered[selected_col],
                 mode='markers',
                 name='Hourly Data',
                 marker=dict(
-                    size=3,
+                    size=4,
                     opacity=0.3,
-                    color='lightblue'
+                    color=COLORS['cyan']
                 )
             ))
             
-            # Average line
+            # Average line: Hot Pink
             fig_temp.add_trace(go.Scatter(
                 x=temp_avg['temp_mid'],
                 y=temp_avg[selected_col],
                 mode='lines',
                 name='Average',
-                line=dict(color='red', width=3)
+                line=dict(color=COLORS['pink'], width=4)
             ))
             
             fig_temp.update_layout(
@@ -314,7 +340,7 @@ try:
             optimal_temp = temp_avg.loc[temp_avg[selected_col].idxmax(), 'temp_mid']
             
             st.markdown("**Temperature Insights:**")
-            st.metric("Optimal Temperature", f"{optimal_temp:.1f}°C")
+            st.metric(":material/wb_sunny: Optimal Temperature", f"{optimal_temp:.1f}°C")
             
             # Comfort zones
             comfort_zones = {
@@ -330,19 +356,23 @@ try:
                 st.caption(f"{zone}: {avg:.0f} avg rentals")
         
         # Weather situation impact
-        st.markdown("### ☁️ Weather Conditions Impact")
+        st.divider()
+        st.markdown("### :material/cloud: Weather Conditions Impact")
         
         col1, col2 = st.columns(2)
         
         with col1:
             weather_avg = df_filtered.groupby('weather_name')[selected_col].agg(['mean', 'count']).reset_index()
             
+            # Good -> Green, Bad -> Pink/Purple
+            weather_colors = [COLORS['green'], COLORS['amber'], COLORS['pink'], COLORS['purple']]
+            
             fig_weather = go.Figure([go.Bar(
                 x=weather_avg['weather_name'],
                 y=weather_avg['mean'],
                 text=weather_avg['mean'].round(0),
                 textposition='auto',
-                marker_color=['green', 'yellow', 'orange', 'red']
+                marker_color=weather_colors
             )])
             
             fig_weather.update_layout(
@@ -366,7 +396,8 @@ try:
             st.dataframe(weather_stats, use_container_width=True, hide_index=True)
         
         # Combined weather factors
-        st.markdown("### 🌈 Combined Weather Factors")
+        st.divider()
+        st.markdown("### :material/water_drop: Combined Weather Factors")
         
         # Create 2D heatmap of temp vs humidity
         temp_bins = pd.qcut(df_filtered['temp'], q=10, duplicates='drop')
@@ -378,7 +409,7 @@ try:
             z=heatmap_data.values,
             x=['Low Humidity'] + [f'Hum {i}' for i in range(2, 10)] + ['High Humidity'],
             y=['Low Temp'] + [f'Temp {i}' for i in range(2, 10)] + ['High Temp'],
-            colorscale='RdBu',
+            colorscale='Viridis', # Viridis pops in dark mode
             text=heatmap_data.values.round(0),
             texttemplate='%{text}',
             textfont={"size": 10}
@@ -394,10 +425,10 @@ try:
         st.plotly_chart(fig_heatmap, use_container_width=True)
     
     with tab3:
-        st.markdown("## 🔄 User Behavior Analysis")
+        st.markdown("## :material/groups: User Behavior Analysis")
         
         # Casual vs Registered comparison
-        st.markdown("### 👥 Casual vs Registered Users")
+        st.markdown("### :material/compare_arrows: Casual vs Registered Users")
         
         col1, col2 = st.columns(2)
         
@@ -407,12 +438,13 @@ try:
             
             fig_user_hourly = go.Figure()
             
+            # Casual = Pink, Registered = Cyan
             fig_user_hourly.add_trace(go.Scatter(
                 x=hourly_user['hr'],
                 y=hourly_user['casual'],
                 mode='lines+markers',
                 name='Casual Users',
-                line=dict(color='orange', width=3)
+                line=dict(color=COLORS['pink'], width=3)
             ))
             
             fig_user_hourly.add_trace(go.Scatter(
@@ -420,7 +452,7 @@ try:
                 y=hourly_user['registered'],
                 mode='lines+markers',
                 name='Registered Users',
-                line=dict(color='blue', width=3)
+                line=dict(color=COLORS['cyan'], width=3)
             ))
             
             fig_user_hourly.update_layout(
@@ -441,7 +473,7 @@ try:
                 labels=['Casual', 'Registered'],
                 values=[total_casual, total_registered],
                 hole=0.4,
-                marker_colors=['orange', 'blue']
+                marker_colors=[COLORS['pink'], COLORS['cyan']]
             )])
             
             fig_pie.update_layout(
@@ -453,7 +485,7 @@ try:
             st.plotly_chart(fig_pie, use_container_width=True)
         
         # User behavior by conditions
-        st.markdown("### 🎯 User Preferences")
+        st.markdown("### :material/ads_click: User Preferences")
         
         # Calculate preferences
         conditions = ['workingday', 'holiday', 'season_name', 'weather_name']
@@ -481,14 +513,14 @@ try:
             x=preference_df['Value'],
             y=preference_df['Casual %'],
             name='Casual %',
-            marker_color='orange'
+            marker_color=COLORS['pink']
         ))
         
         fig_preferences.add_trace(go.Bar(
             x=preference_df['Value'],
             y=preference_df['Registered %'],
             name='Registered %',
-            marker_color='blue'
+            marker_color=COLORS['cyan']
         ))
         
         fig_preferences.update_layout(
@@ -502,7 +534,7 @@ try:
         st.plotly_chart(fig_preferences, use_container_width=True)
         
         # Key insights
-        st.markdown("### 💡 Key User Insights")
+        st.markdown("### :material/lightbulb: Key User Insights")
         
         col1, col2, col3 = st.columns(3)
         
@@ -512,7 +544,7 @@ try:
             weekend_increase = ((casual_weekend / casual_weekday - 1) * 100)
             
             st.metric(
-                "Casual Users Weekend Increase",
+                ":material/trending_up: Casual Weekend Increase",
                 f"{weekend_increase:.1f}%",
                 "vs weekdays"
             )
@@ -523,7 +555,7 @@ try:
             morning_ratio = reg_morning / reg_other
             
             st.metric(
-                "Registered Morning Commute",
+                ":material/commute: Registered Morning Commute",
                 f"{morning_ratio:.1f}x",
                 "vs other hours"
             )
@@ -534,16 +566,16 @@ try:
             weather_sensitivity = ((good_weather_ratio / bad_weather_ratio - 1) * 100)
             
             st.metric(
-                "Casual Weather Sensitivity",
+                ":material/water: Casual Weather Sensitivity",
                 f"{weather_sensitivity:.0f}%",
                 "good vs bad weather"
             )
     
     with tab4:
-        st.markdown("## 🔗 Correlation Analysis")
+        st.markdown("## :material/hub: Correlation Analysis")
         
         # Correlation matrix
-        st.markdown("### 📊 Feature Correlations")
+        st.markdown("### :material/dataset: Feature Correlations")
         
         # Select features for correlation
         corr_features = st.multiselect(
@@ -560,7 +592,7 @@ try:
                 z=corr_matrix.values,
                 x=corr_matrix.columns,
                 y=corr_matrix.columns,
-                colorscale='RdBu',
+                colorscale='RdBu', # Standard for correlation (Red=Neg, Blue=Pos)
                 zmid=0,
                 text=corr_matrix.values.round(2),
                 texttemplate='%{text}',
@@ -576,7 +608,7 @@ try:
             st.plotly_chart(fig_corr, use_container_width=True)
             
             # Key correlations
-            st.markdown("### 🔑 Key Correlations with Demand")
+            st.markdown("### :material/key: Key Correlations with Demand")
             
             # Get correlations with target
             target_corr = corr_matrix['cnt'].drop('cnt').sort_values(ascending=False)
@@ -587,16 +619,17 @@ try:
                 st.markdown("**Positive Correlations:**")
                 positive_corr = target_corr[target_corr > 0].head(5)
                 for feature, corr in positive_corr.items():
-                    st.caption(f"• {feature}: {corr:.3f}")
+                    st.caption(f":material/add_circle: {feature}: {corr:.3f}")
             
             with col2:
                 st.markdown("**Negative Correlations:**")
                 negative_corr = target_corr[target_corr < 0].head(5)
                 for feature, corr in negative_corr.items():
-                    st.caption(f"• {feature}: {corr:.3f}")
+                    st.caption(f":material/remove_circle: {feature}: {corr:.3f}")
         
         # Scatter plot matrix
-        st.markdown("### 📈 Relationship Explorer")
+        st.divider()
+        st.markdown("### :material/scatter_plot: Relationship Explorer")
         
         col1, col2 = st.columns(2)
         
@@ -618,15 +651,21 @@ try:
             size='cnt',
             trendline="lowess",
             title=f'{y_feature} vs {x_feature}',
-            opacity=0.6
+            opacity=0.6,
+            color_discrete_map={
+                'Clear': COLORS['green'],
+                'Mist/Cloudy': COLORS['amber'],
+                'Light Rain/Snow': COLORS['pink'],
+                'Heavy Rain/Snow': COLORS['purple']
+            }
         )
         
         st.plotly_chart(fig_scatter, use_container_width=True)
     
     with tab5:
-        st.markdown("## Advanced Analysis")
+        st.markdown("## :material/science: Advanced Analysis")
    
-        st.markdown("###  Year-over-Year Growth Analysis")
+        st.markdown("### :material/trending_up: Year-over-Year Growth Analysis")
         
         yoy_data = df.groupby(['yr', 'mnth']).agg({
             'cnt': 'sum',
@@ -645,17 +684,24 @@ try:
         
         fig_growth = go.Figure()
         
+        # Distinct neon colors for growth lines
+        growth_colors = {
+            'Total Growth %': COLORS['cyan'],
+            'Casual Growth %': COLORS['pink'],
+            'Registered Growth %': COLORS['purple']
+        }
+
         for col in ['Total Growth %', 'Casual Growth %', 'Registered Growth %']:
             fig_growth.add_trace(go.Scatter(
                 x=growth_rates['Month'],
                 y=growth_rates[col],
                 mode='lines+markers',
                 name=col.replace(' %', ''),
-                line=dict(width=3),
+                line=dict(width=3, color=growth_colors[col]),
                 marker=dict(size=8)
             ))
         
-        fig_growth.add_hline(y=0, line_dash="dash", line_color="gray")
+        fig_growth.add_hline(y=0, line_dash="dash", line_color=COLORS['slate'])
         
         fig_growth.update_layout(
             title='Year-over-Year Growth by Month (2012 vs 2011)',
@@ -675,14 +721,15 @@ try:
         overall_growth = ((total_2012 / total_2011 - 1) * 100)
         
         with col1:
-            st.metric("Overall Growth", f"{overall_growth:.1f}%", "2012 vs 2011")
+            st.metric(":material/show_chart: Overall Growth", f"{overall_growth:.1f}%", "2012 vs 2011")
         with col2:
             st.metric("2011 Total", f"{total_2011:,} rentals")
         with col3:
             st.metric("2012 Total", f"{total_2012:,} rentals")
         
         # Demand forecasting insights
-        st.markdown("### Demand Pattern Insights")
+        st.divider()
+        st.markdown("### :material/insights: Demand Pattern Insights")
         
         # Calculate some advanced metrics
         # Weekday vs weekend ratio
@@ -700,7 +747,7 @@ try:
         weather_impact = ((clear_avg - bad_weather_avg) / clear_avg * 100)
         
         # Display insights
-        st.markdown("####  Key Operational Insights")
+        st.markdown("#### :material/lightbulb: Key Operational Insights")
         
         insight_col1, insight_col2 = st.columns(2)
         

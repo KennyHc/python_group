@@ -6,11 +6,16 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import joblib
 from pathlib import Path
+from utils import load_css
 
+
+# page_icon must remain an emoji or file path
 st.set_page_config(page_title="Predictions", page_icon="🔮", layout="wide")
 
+load_css()
+
 # Title
-st.title("Real-Time Demand Predictions")
+st.title(":material/online_prediction: Real-Time Demand Predictions")
 st.markdown("Make predictions for bike rental demand using the trained model")
 
 script_dir = Path(__file__).parent.parent
@@ -61,8 +66,7 @@ def load_historical_data():
         st.error(f"An error occurred loading historical data: {e}")
         return None
 
-# --- Feature Engineering Function (Refactored) ---
-# This function can now be used by Tab 1 and Tab 3
+# --- Feature Engineering Function ---
 def create_feature_dict(prediction_date, hour, temp_celsius, atemp_celsius, humidity_percent, windspeed_kmh, weather_condition_str, is_holiday_bool):
     """
     Creates the complete feature dictionary required by the model
@@ -158,29 +162,30 @@ try:
     historical_data = load_historical_data()
     
     if model is None:
-        st.error("⚠️ Model not found! Please ensure the model file is exported from the notebook.")
+        st.error("Model not found! Please ensure the model file is exported from the notebook.")
         st.stop()
     if feature_names is None:
-        st.error("⚠️ 'feature_names.csv' not found! This file is required.")
+        st.error("'feature_names.csv' not found! This file is required.")
         st.stop()
         
-    # Prediction modes
-    tab1, tab2, tab3 = st.tabs([
-        " Single Prediction",
-        " Batch Predictions",
-        " What-If Scenarios"
+    # Prediction modes - Removed "Batch Predictions"
+    tab1, tab2 = st.tabs([
+        ":material/touch_app: Single Prediction",
+        ":material/science: What-If Scenarios"
     ])
     
-    # --- TAB 1: SINGLE PREDICTION (FIXED) ---
+    # --- TAB 1: SINGLE PREDICTION ---
     with tab1:
-        st.markdown("### Make a Single Prediction")
+        st.markdown("### :material/edit: Make a Single Prediction")
         st.info("Adjust the parameters below to predict bike rental demand for a specific hour")
         
+        
+
         # Create input columns
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("#### Date & Time")
+            st.markdown("#### :material/event: Date & Time")
             prediction_date = st.date_input(
                 "Select date",
                 value=datetime.now().date(),
@@ -192,7 +197,7 @@ try:
             is_holiday = st.checkbox("Is it a holiday?", value=False, key="tab1_holiday")
         
         with col2:
-            st.markdown("#### Weather Conditions")
+            st.markdown("#### :material/thermostat: Weather Conditions")
             temp_celsius = st.slider(
                 "Temperature (°C)", -10.0, 40.0, 20.0, 0.5, key="tab1_temp"
             )
@@ -207,7 +212,7 @@ try:
             )
         
         with col3:
-            st.markdown("#### Weather Type")
+            st.markdown("#### :material/cloud: Weather Type")
             weather_condition = st.radio(
                 "Select weather condition",
                 options=["Clear, Few clouds", "Mist + Cloudy", "Light Snow/Rain", "Heavy Rain/Snow"],
@@ -215,9 +220,9 @@ try:
             )
         
         # Create feature vector
-        st.markdown("---")
+        st.divider()
         
-        # 1. Get feature dictionary from our refactored function
+        # 1. Get feature dictionary
         features = create_feature_dict(
             prediction_date=prediction_date,
             hour=hour,
@@ -229,7 +234,7 @@ try:
             is_holiday_bool=is_holiday
         )
         
-        # 2. Create feature vector in correct order
+        # 2. Create feature vector
         try:
             feature_vector = np.array([features.get(f, 0) for f in feature_names]).reshape(1, -1)
         except Exception as e:
@@ -240,7 +245,7 @@ try:
         prediction = model.predict(feature_vector)[0]
         prediction = max(0, int(prediction)) # Ensure non-negative
         
-        # 4. Display prediction (This now updates live)
+        # 4. Display prediction
         col1_pred, col2_pred, col3_pred = st.columns([1, 2, 1])
         
         with col2_pred:
@@ -251,20 +256,25 @@ try:
                 f"for {prediction_date} at {hour}:00"
             )
             
-            if prediction < 50: level, color = "Very Low", "🟢"
-            elif prediction < 150: level, color = "Low", "🟡"
-            elif prediction < 300: level, color = "Moderate", "🟠"
-            elif prediction < 500: level, color = "High", "🔴"
-            else: level, color = "Very High", "🟣"
+            if prediction < 50: 
+                level, icon_level = "Very Low", ":material/trending_down:"
+            elif prediction < 150: 
+                level, icon_level = "Low", ":material/low_priority:"
+            elif prediction < 300: 
+                level, icon_level = "Moderate", ":material/drag_handle:"
+            elif prediction < 500: 
+                level, icon_level = "High", ":material/trending_up:"
+            else: 
+                level, icon_level = "Very High", ":material/priority_high:"
             
-            st.info(f"{color} Demand Level: **{level}**")
+            st.info(f"{icon_level} Demand Level: **{level}**")
         
         # 5. Show similar historical patterns
-        st.markdown("---")
-        st.markdown("### 📊 Similar Historical Patterns")
+        st.divider()
+        st.markdown("### :material/history: Similar Historical Patterns")
         
         if historical_data is not None:
-            # Find similar conditions (using feature dict values)
+            # Find similar conditions
             similar_conditions = historical_data[
                 (historical_data['hr'] == features['hr']) &
                 (historical_data['weathersit'] == features['weathersit']) &
@@ -298,45 +308,10 @@ try:
             else:
                 st.warning("No similar historical data found for these specific conditions.")
 
-    # --- TAB 2: BATCH PREDICTIONS (Unchanged) ---
-    with tab2:
-        st.markdown("### 📊 Batch Predictions")
-        st.info("Upload a CSV file with multiple scenarios to get batch predictions")
-        
-        # File upload
-        uploaded_file = st.file_uploader(
-            "Choose a CSV file",
-            type=['csv'],
-            help="File should contain columns matching the template."
-        )
-        
-        if uploaded_file is not None:
-            # This tab would need its own full implementation
-            # to process the CSV, which is not trivial.
-            st.warning("Batch processing logic is not fully implemented in this demo.")
-            # ... (rest of the placeholder logic) ...
-        
-        # Template download
-        st.markdown("#### Need a template?")
-        template_data = {
-            'date': ['2024-01-01', '2024-01-01'], 'hour': [8, 12],
-            'temp_celsius': [10, 15], 'atemp_celsius': [9.5, 15],
-            'humidity_percent': [60, 50], 'windspeed_kmh': [10, 5],
-            'weather_condition_str': ['Clear, Few clouds', 'Mist + Cloudy'],
-            'is_holiday_bool': [False, False]
-        }
-        template_df = pd.DataFrame(template_data)
-        template_csv = template_df.to_csv(index=False)
-        st.download_button(
-            label=" Download Template CSV",
-            data=template_csv,
-            file_name="batch_prediction_template.csv",
-            mime="text/csv"
-        )
     
-    # --- TAB 3: WHAT-IF SCENARIOS (FIXED) ---
-    with tab3:
-        st.markdown("### 📈 What-If Scenario Analysis")
+    # --- TAB 2: WHAT-IF SCENARIOS (Formerly Tab 3) ---
+    with tab2:
+        st.markdown("### :material/tune: What-If Scenario Analysis")
         st.info("Explore how changing one factor affects demand, holding all others constant.")
         
         # --- Base Scenario Inputs ---
@@ -346,7 +321,7 @@ try:
         with col1:
             base_date = st.date_input(
                 "Select date",
-                value=datetime(2022, 7, 1).date(), # A summer weekday
+                value=datetime(2022, 7, 1).date(),
                 key="tab3_date"
             )
             base_hour = st.slider("Hour of day", 0, 23, 17, key="tab3_hour")
@@ -373,7 +348,7 @@ try:
                 key="tab3_weather"
             )
             
-        st.markdown("---")
+        st.divider()
         
         # --- Analysis Type ---
         st.markdown("#### 2. Choose Analysis Type")
@@ -383,18 +358,17 @@ try:
             horizontal=True
         )
 
-        # --- Run Analysis & Plot ---
-        # This logic is now LIVE and uses the REAL model
         
+
+        # --- Run Analysis & Plot ---
         if scenario_type == "Temperature Impact":
-            variable_range = np.arange(-5, 41, 1) # Test temps from -5°C to 40°C
+            variable_range = np.arange(-5, 41, 1) 
             predictions = []
             
             for temp in variable_range:
-                # Get features, overriding temp and atemp
                 features = create_feature_dict(
                     prediction_date=base_date, hour=base_hour,
-                    temp_celsius=temp, atemp_celsius=temp, # Use loop temp
+                    temp_celsius=temp, atemp_celsius=temp,
                     humidity_percent=base_humidity, windspeed_kmh=base_windspeed,
                     weather_condition_str=base_weather, is_holiday_bool=base_holiday
                 )
@@ -402,7 +376,6 @@ try:
                 pred = model.predict(feature_vector)[0]
                 predictions.append(max(0, int(pred)))
             
-            # Create visualization
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=variable_range, y=predictions, mode='lines',
@@ -417,13 +390,12 @@ try:
             st.plotly_chart(fig, use_container_width=True)
 
         elif scenario_type == "Time of Day Impact":
-            variable_range = list(range(24)) # Test all 24 hours
+            variable_range = list(range(24))
             predictions = []
             
             for hour in variable_range:
-                # Get features, overriding hour
                 features = create_feature_dict(
-                    prediction_date=base_date, hour=hour, # Use loop hour
+                    prediction_date=base_date, hour=hour,
                     temp_celsius=base_temp, atemp_celsius=base_atemp,
                     humidity_percent=base_humidity, windspeed_kmh=base_windspeed,
                     weather_condition_str=base_weather, is_holiday_bool=base_holiday
@@ -432,7 +404,6 @@ try:
                 pred = model.predict(feature_vector)[0]
                 predictions.append(max(0, int(pred)))
             
-            # Create visualization
             fig = go.Figure()
             fig.add_trace(go.Bar(x=variable_range, y=predictions, marker_color='lightblue'))
             fig.add_vline(x=base_hour, line_dash="dash", line_color="grey", annotation_text="Base Hour")
@@ -449,18 +420,16 @@ try:
             predictions = []
             
             for weather in variable_range:
-                # Get features, overriding weather
                 features = create_feature_dict(
                     prediction_date=base_date, hour=base_hour,
                     temp_celsius=base_temp, atemp_celsius=base_atemp,
                     humidity_percent=base_humidity, windspeed_kmh=base_windspeed,
-                    weather_condition_str=weather, is_holiday_bool=base_holiday # Use loop weather
+                    weather_condition_str=weather, is_holiday_bool=base_holiday
                 )
                 feature_vector = np.array([features.get(f, 0) for f in feature_names]).reshape(1, -1)
                 pred = model.predict(feature_vector)[0]
                 predictions.append(max(0, int(pred)))
             
-            # Create visualization
             fig = go.Figure()
             fig.add_trace(go.Bar(x=variable_range, y=predictions, marker_color='dodgerblue'))
             fig.update_layout(
@@ -472,5 +441,4 @@ try:
 
 except Exception as e:
     st.error(f"An unexpected error occurred: {str(e)}")
-    st.exception(e)
     st.info("Please ensure all required files (model, features, data) are available.")

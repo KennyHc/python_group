@@ -5,8 +5,13 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 from pathlib import Path
+from utils import load_css
 
+# Title
 st.set_page_config(page_title="Data Overview", page_icon="📊", layout="wide")
+
+load_css()
+
 
 script_dir = Path(__file__).parent.parent
 
@@ -30,10 +35,11 @@ def load_data():
         return df_original, df_processed
         
     except FileNotFoundError as e:
+        # Removed 'icon' parameter for compatibility
         st.error(f"Error: A data file was not found.")
         st.error(f"Details: {e}")
         st.info("Please check that 'bike_data_original.csv' and 'bike_data_processed.csv' exist in the 'data' folder.")
-        return None, None  # Return None for both dataframes
+        return None, None
     except Exception as e:
         st.error(f"An error occurred loading the data: {e}")
         return None, None
@@ -42,7 +48,7 @@ try:
     df_original, df_processed = load_data()
     
     # Data Overview Section
-    st.markdown("## 📋 Dataset Information")
+    st.markdown("## :material/dataset: Dataset Information")
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -57,16 +63,16 @@ try:
     
     # Data Quality Section
     st.markdown("---")
-    st.markdown("## 🔍 Data Quality Analysis")
+    st.markdown("## :material/fact_check: Data Quality Analysis")
     
     # Missing values check
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### Missing Values Check")
+        st.markdown("### :material/rule: Missing Values Check")
         missing_values = df_original.isnull().sum()
         if missing_values.sum() == 0:
-            st.success("✅ No missing values found in the dataset!")
+            st.success("No missing values found in the dataset")
             st.markdown("All 17,379 records are complete with no null values.")
         else:
             fig_missing = px.bar(
@@ -78,7 +84,7 @@ try:
             st.plotly_chart(fig_missing, use_container_width=True)
     
     with col2:
-        st.markdown("### Data Types")
+        st.markdown("### :material/donut_large: Data Types")
         dtype_counts = df_original.dtypes.value_counts()
         
         fig_dtype = go.Figure(data=[
@@ -98,7 +104,7 @@ try:
     
     # Feature Descriptions
     st.markdown("---")
-    st.markdown("## 📖 Feature Descriptions")
+    st.markdown("## :material/description: Feature Descriptions")
     
     feature_descriptions = {
         'instant': 'Record index',
@@ -120,24 +126,27 @@ try:
         'cnt': 'Count of total rental bikes'
     }
     
-    # Create expandable feature descriptions
-    with st.expander("📝 Click to view detailed feature descriptions"):
+    # Removed 'icon' parameter
+    with st.expander("View detailed feature descriptions"):
         for feature, description in feature_descriptions.items():
             if feature in df_original.columns:
                 st.markdown(f"**{feature}**: {description}")
     
     # Statistical Summary
     st.markdown("---")
-    st.markdown("## 📈 Statistical Summary")
+    st.markdown("## :material/analytics: Statistical Summary")
     
-    # Tabs for different variable types
-    tab1, tab2, tab3 = st.tabs(["Numerical Variables", "Categorical Variables", "Target Variable"])
+    # Tabs
+    tab1, tab2, tab3 = st.tabs([
+        "Numerical Variables", 
+        "Categorical Variables", 
+        "Target Variable"
+    ])
     
     with tab1:
         # Numerical features
         numerical_features = ['temp', 'atemp', 'hum', 'windspeed', 'casual', 'registered', 'cnt']
         
-        # Add filter for features
         selected_numerical = st.multiselect(
             "Select numerical features to analyze:",
             numerical_features,
@@ -149,8 +158,7 @@ try:
             summary_stats = df_original[selected_numerical].describe().round(2)
             st.dataframe(summary_stats, use_container_width=True)
             
-            # Distribution plots
-            st.markdown("### Distribution Analysis")
+            st.markdown("### :material/bar_chart: Distribution Analysis")
             
             fig = make_subplots(
                 rows=len(selected_numerical),
@@ -187,7 +195,6 @@ try:
         )
         
         if selected_categorical:
-            # Create columns for side-by-side charts
             cols = st.columns(2)
             
             for idx, feature in enumerate(selected_categorical):
@@ -237,8 +244,7 @@ try:
                         st.caption(f"- {label}: {count:,} ({percentage:.1f}%)")
     
     with tab3:
-        # Target variable analysis
-        st.markdown("### 🎯 Target Variable: Total Bike Rentals (cnt)")
+        st.markdown("### :material/target: Target Variable: Total Bike Rentals (cnt)")
         
         col1, col2 = st.columns(2)
         
@@ -300,7 +306,7 @@ try:
     
     # Data Sample
     st.markdown("---")
-    st.markdown("## 🔢 Data Sample")
+    st.markdown("## :material/table_view: Data Sample")
     
     # Add filters
     col1, col2, col3 = st.columns(3)
@@ -317,8 +323,9 @@ try:
     
     # Export option
     csv = sample_df.to_csv(index=False)
+    # Removed 'icon' parameter
     st.download_button(
-        label="📥 Download Sample Data as CSV",
+        label="Download Sample Data as CSV",
         data=csv,
         file_name="bike_sharing_sample.csv",
         mime="text/csv"
@@ -326,8 +333,9 @@ try:
     
     # Feature Engineering Summary
     st.markdown("---")
-    st.markdown("## 🔧 Feature Engineering Summary")
+    st.markdown("## :material/engineering: Feature Engineering Summary")
     
+    # Removed 'icon' parameter
     st.info("""
     **New features created during analysis:**
     - **Temporal Features**: `hour_sin`, `hour_cos`, `month_sin`, `month_cos` (cyclical encoding)
@@ -341,5 +349,6 @@ try:
     """)
 
 except Exception as e:
+    # Removed 'icon' parameter
     st.error(f"Error loading data: {str(e)}")
     st.info("Please ensure the data files are properly exported from the Jupyter notebook.")

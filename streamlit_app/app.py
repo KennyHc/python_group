@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 from pathlib import Path
+from utils import load_css
 
 # Page configuration
 st.set_page_config(
@@ -13,93 +14,53 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+load_css()
+
 script_dir = Path(__file__).parent
-
-# Custom CSS for better styling
-st.markdown("""
-<style>
-    /* Main Header: Bold, modern font with a slight shadow for depth */
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--text-color); /* Adapts to dark/light mode */
-        text-align: center;
-        margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Metric Card: Glassmorphism effect with borders and shadows */
-    .metric-card {
-        background-color: var(--secondary-background-color); /* Use Streamlit's secondary bg */
-        padding: 1.5rem;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle drop shadow */
-        border: 1px solid rgba(128, 128, 128, 0.2); /* Subtle border for definition */
-        transition: transform 0.2s; /* Smooth hover effect */
-    }
-    
-    /* Hover effect for interactivity */
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Insight Box: Uses semi-transparent background for readability in both modes */
-    .insight-box {
-        background-color: rgba(31, 119, 180, 0.15); /* Blue tint that works on dark & light */
-        padding: 1.2rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        border-left: 5px solid #1f77b4; /* Solid accent line */
-        color: var(--text-color);
-    }
-</style>
-""", unsafe_allow_html=True)
 
 @st.cache_data
 def load_summary_stats():
     """Loads the summary statistics file."""
     try:
-
         path_summary = script_dir / 'data/summary_stats.csv'
         return pd.read_csv(path_summary)
-        
     except FileNotFoundError:
-        st.error("Error: The summary statistics file ('summary_stats.csv') was not found.")
-        st.info("Please check the 'data' folder in your repo.")
+        st.error("Error: The summary statistics file ('summary_stats.csv') was not found.", icon=":material/error:")
+        st.info("Please check the 'data' folder in your repo.", icon=":material/info:")
         return None
     except Exception as e:
-        st.error(f"An error occurred loading summary stats: {e}")
+        st.error(f"An error occurred loading summary stats: {e}", icon=":material/error:")
         return None
 
 @st.cache_data
 def load_processed_data():
     """Loads the processed dataset."""
     try:
-
         path_processed = script_dir / 'data/bike_data_processed.csv'
         return pd.read_csv(path_processed)
-        
     except FileNotFoundError:
-        st.error("Error: The processed data file ('bike_data_processed.csv') was not found.")
-        st.info("Please check the 'data' folder in your repo.")
+        st.error("Error: The processed data file ('bike_data_processed.csv') was not found.", icon=":material/error:")
+        st.info("Please check the 'data' folder in your repo.", icon=":material/info:")
         return None
     except Exception as e:
-        st.error(f"An error occurred loading processed data: {e}")
+        st.error(f"An error occurred loading processed data: {e}", icon=":material/error:")
         return None
 
-# Main page content
-st.markdown('<h1 class="main-header"> Bike Sharing Demand Analysis Dashboard</h1>', unsafe_allow_html=True)
+# --- Main Page Content ---
 
+st.markdown('<h1 class="main-header">Bike Sharing Demand Analysis</h1>', unsafe_allow_html=True)
+
+# Image loading with prompt tag
 image_path = script_dir / 'bikes.jpg'
+
+
 
 try:
     st.image(str(image_path), 
-            caption="Bike Sharing Is Recomended by Group 1!", 
+            caption="Strategic Analysis for Department of Transportation Services", 
             use_column_width=True) 
 except FileNotFoundError:
-    st.error("Header image not found.")
+    st.error("Header image not found.", icon=":material/broken_image:")
 
 
 # Load data
@@ -111,42 +72,42 @@ try:
     df['dteday'] = pd.to_datetime(df['dteday'])
     
     # Key Metrics Section
-    st.markdown("## 📊 Key Performance Indicators")
+    st.markdown("## :material/monitoring: Key Performance Indicators")
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric(
-            label="Total Records Analyzed",
+            label=":material/dataset: Total Records",
             value=f"{stats['total_records'].values[0]:,}",
             delta="2 years of hourly data"
         )
     
     with col2:
         st.metric(
-            label="Average Hourly Demand",
+            label=":material/schedule: Avg Hourly Demand",
             value=f"{stats['avg_demand'].values[0]:.0f} bikes",
             delta=f"Peak: {stats['peak_demand'].values[0]:.0f} bikes"
         )
     
     with col3:
         st.metric(
-            label="Best Model Performance",
-            value=f"R² = {stats['best_r2'].values[0]:.3f}",
+            label=":material/model_training: Best Model R²",
+            value=f"{stats['best_r2'].values[0]:.3f}",
             delta=f"RMSE: {stats['best_rmse'].values[0]:.1f} bikes"
         )
     
     with col4:
         best_model = stats['best_model_name'].values[0]
         st.metric(
-            label="Selected Model",
+            label=":material/check_circle: Selected Model",
             value=best_model,
-            delta="After hyperparameter tuning"
+            delta="Optimized Gradient Boosting"
         )
     
     # Visual Overview
-    st.markdown("---")
-    st.markdown("## 📈 Demand Trends Overview")
+    st.divider()
+    st.markdown("## :material/timeline: Demand Trends Overview")
     
     col1, col2 = st.columns(2)
     
@@ -196,64 +157,65 @@ try:
         st.plotly_chart(fig_hourly, use_container_width=True)
     
     # Key Insights Section
-    st.markdown("---")
-    st.markdown("## Key Insights from Analysis")
+    st.divider()
+    st.markdown("## :material/lightbulb: Key Insights from Analysis")
     
     col1, col2, col3 = st.columns(3)
     
+    # Using HTML for Custom Cards with Material Symbols
     with col1:
         st.markdown("""
         <div class="insight-box">
-        <h4>🕐 Time Patterns</h4>
-        <ul>
-        <li>Rush hours (8-9 AM, 5-6 PM) show peak demand</li>
-        <li>Weekend patterns differ significantly</li>
-        <li>Year-over-year growth: 64.9%</li>
-        </ul>
+            <h4><span class="material-symbols-rounded">schedule</span> Time Patterns</h4>
+            <ul>
+                <li><span class="material-symbols-rounded">chevron_right</span> Rush hours (8-9 AM, 5-6 PM) show peak demand</li>
+                <li><span class="material-symbols-rounded">chevron_right</span> Weekend patterns differ significantly</li>
+                <li><span class="material-symbols-rounded">trending_up</span> Year-over-year growth: 64.9%</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown("""
         <div class="insight-box">
-        <h4>🌡️ Weather Impact</h4>
-        <ul>
-        <li>Temperature is 2nd most important factor</li>
-        <li>Optimal range: 20-25°C (normalized)</li>
-        <li>Bad weather reduces demand by ~66%</li>
-        </ul>
+            <h4><span class="material-symbols-rounded">thermostat</span> Weather Impact</h4>
+            <ul>
+                <li><span class="material-symbols-rounded">chevron_right</span> Temperature is 2nd most important factor</li>
+                <li><span class="material-symbols-rounded">wb_sunny</span> Optimal range: 20-25°C (normalized)</li>
+                <li><span class="material-symbols-rounded">umbrella</span> Bad weather reduces demand by ~66%</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown("""
         <div class="insight-box">
-        <h4>🎯 Model Accuracy</h4>
-        <ul>
-        <li>Explains 88.9% of demand variation</li>
-        <li>Average error: ±67 bikes/hour</li>
-        <li>Suitable for capacity planning</li>
-        </ul>
+            <h4><span class="material-symbols-rounded">smart_toy</span> Model Accuracy</h4>
+            <ul>
+                <li><span class="material-symbols-rounded">chevron_right</span> Explains 88.9% of demand variation</li>
+                <li><span class="material-symbols-rounded">chevron_right</span> Average error: ±67 bikes/hour</li>
+                <li><span class="material-symbols-rounded">verified</span> Suitable for capacity planning</li>
+            </ul>
         </div>
         """, unsafe_allow_html=True)
     
     # Navigation Guide
-    st.markdown("---")
-    st.markdown("## 🗺️ Dashboard Navigation Guide")
+    st.divider()
+    st.markdown("## :material/map: Dashboard Navigation Guide")
     
     st.info("""
     **Explore the complete analysis using the sidebar navigation:**
     
-    1. ** Data Overview** - Examine data quality, missing values, and basic statistics
-    2. ** Exploratory Analysis** - Interactive visualizations of demand patterns and relationships
-    3. ** Model Performance** - Compare different models and see detailed performance metrics
-    4. ** Predictions** - Make real-time predictions with custom inputs
-    5. ** Recommendations** - Business insights and actionable recommendations
-    """)
+    1. **:material/table_view: Data Overview** - Examine data quality, missing values, and basic statistics
+    2. **:material/analytics: Exploratory Analysis** - Interactive visualizations of demand patterns and relationships
+    3. **:material/speed: Model Performance** - Compare different models and see detailed performance metrics
+    4. **:material/online_prediction: Predictions** - Make real-time predictions with custom inputs
+    5. **:material/assistant: Recommendations** - Business insights and actionable recommendations
+    """, icon=":material/info:")
     
     # Year comparison
-    st.markdown("---")
-    st.markdown("## 📅 Year-over-Year Comparison")
+    st.divider()
+    st.markdown("## :material/compare_arrows: Year-over-Year Comparison")
     
     # Calculate yearly stats
     df['year'] = df['yr'].map({0: '2011', 1: '2012'})
@@ -321,20 +283,20 @@ try:
         st.plotly_chart(fig_user_type, use_container_width=True)
     
     # Footer
-    st.markdown("---")
+    st.divider()
     st.markdown("""
-    <div style='text-align: center; color: #666;'>
+    <div style='text-align: center; color: #888; font-size: 0.9rem;'>
     <p>Dashboard created with Streamlit | Data: Capital Bikeshare System (2011-2012)</p>
     </div>
     """, unsafe_allow_html=True)
     
 except FileNotFoundError:
     st.error("""
-    ⚠️ **Data files not found!**
+    **Data files not found!**
     
     Please make sure you have exported the data from your Jupyter notebook by running the export code.
     The app expects to find data files in the `data/` subdirectory.
-    """)
+    """, icon=":material/database:")
     
     st.info("""
     **Required files:**
@@ -343,4 +305,4 @@ except FileNotFoundError:
     - `data/model_results.csv`
     - `data/predictions.csv`
     - `models/best_model.pkl`
-    """)
+    """, icon=":material/description:")
