@@ -1,3 +1,11 @@
+### Live Deployment
+
+The application is hosted online. You can access the live dashboard here:
+
+[https://python-bike-rental.streamlit.app/](https://python-bike-rental.streamlit.app/)
+
+### Local Running Details
+
 In the `streamlit_app/` folder we have.
 
 1. **Main Application Files:**
