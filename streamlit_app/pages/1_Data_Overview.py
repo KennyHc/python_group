@@ -7,7 +7,6 @@ import numpy as np
 from pathlib import Path
 from utils import load_css
 
-# Title
 st.set_page_config(page_title="Data Overview", page_icon="📊", layout="wide")
 
 load_css()
@@ -15,7 +14,7 @@ load_css()
 
 script_dir = Path(__file__).parent.parent
 
-# Title
+
 st.title("Data Overview & Quality Analysis")
 st.markdown("Explore the bike-sharing dataset structure, quality, and basic statistics")
 
@@ -35,7 +34,6 @@ def load_data():
         return df_original, df_processed
         
     except FileNotFoundError as e:
-        # Removed 'icon' parameter for compatibility
         st.error(f"Error: A data file was not found.")
         st.error(f"Details: {e}")
         st.info("Please check that 'bike_data_original.csv' and 'bike_data_processed.csv' exist in the 'data' folder.")

@@ -1,4 +1,3 @@
-# utils.py
 import streamlit as st
 
 def load_css():

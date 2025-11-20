@@ -7,19 +7,16 @@ import numpy as np
 from pathlib import Path
 from utils import load_css
 
-# Note: page_icon best supports emojis for the browser tab
 st.set_page_config(page_title="Exploratory Analysis", page_icon="🔍", layout="wide")
 
 load_css()
 
 
-# Title with Material Icon
 st.title(":material/analytics: Exploratory Data Analysis")
 st.markdown("Discover patterns, trends, and relationships in bike-sharing demand")
 
 script_dir = Path(__file__).parent.parent
 
-# --- COLOR PALETTE FOR DARK MODE ---
 COLORS = {
     'cyan': '#00F0FF',
     'pink': '#FF007A',

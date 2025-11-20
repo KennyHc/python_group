@@ -1,11 +1,9 @@
-All in the `streamlit_app/` folder.
+In the `streamlit_app/` folder we have.
 
 1. **Main Application Files:**
    - `app.py` - Main dashboard with overview and KPIs
    - `requirements.txt` - Python dependencies
    - `README.md` - Comprehensive documentation
-   - `check_setup.py` - Setup verification script
-   - `run_app.sh` - Easy run script
 
 2. **Dashboard Pages (in `pages/` folder):**
    - `1_Data_Overview.py` - Data quality and statistics
@@ -57,19 +55,9 @@ streamlit run app.py
 - Business recommendations are data-driven
 - Color coding helps identify patterns quickly
 
-###  Customization:
-
-Feel free to modify:
-- Color schemes in Plotly charts
-- Add more metrics or KPIs
-- Include additional visualizations
-- Extend the prediction features
-- Add more business rules
-
 ### Troubleshooting:
 
 If you encounter issues:
-1. Run `python check_setup.py` to verify all files
-2. Ensure all CSV exports completed successfully
-3. Check that model pickle files are compatible
-4. Use virtual environment to avoid conflicts
+1. Ensure all CSV exports completed successfully
+2. Check that model pickle files are compatible
+3. Use virtual environment to avoid conflicts

@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from utils import load_css
 
-# Page configuration
+
 st.set_page_config(
     page_title="Bike Sharing Demand Analysis",
     page_icon="🚴",

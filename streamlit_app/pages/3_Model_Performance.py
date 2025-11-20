@@ -9,12 +9,11 @@ from pathlib import Path
 from utils import load_css
 
 
-# page_icon must remain an emoji or file path (Material icons don't work in browser tabs)
 st.set_page_config(page_title="Model Performance", page_icon="📊", layout="wide")
 
 load_css()
 
-# Title with Material Icon
+
 st.title(":material/assessment: Model Performance Analysis")
 st.markdown("Compare different models and analyze prediction accuracy")
 
