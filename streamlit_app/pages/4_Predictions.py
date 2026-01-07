@@ -189,7 +189,7 @@ try:
                 "Select date",
                 value=datetime.now().date(),
                 min_value=datetime(2011, 1, 1).date(),
-                max_value=datetime(2025, 12, 31).date(),
+                max_value=datetime(datetime.now().year + 1, 12, 31).date(),
                 key="tab1_date"
             )
             hour = st.slider("Hour of day", 0, 23, datetime.now().hour, key="tab1_hour")
